@@ -1,0 +1,32 @@
+{
+  "name": "shelterconnect-ai-backend",
+  "version": "1.0.0",
+  "description": "ShelterConnect AI - Multi-step agentic disaster relief coordination backend",
+  "type": "module",
+  "main": "server.js",
+  "scripts": {
+    "start": "node server.js",
+    "dev": "node server.js",
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "keywords": [
+    "disaster-relief",
+    "ai-agents",
+    "tidb",
+    "vector-search",
+    "emergency-coordination"
+  ],
+  "author": "ShelterConnect AI Team",
+  "license": "MIT",
+  "dependencies": {
+    "cors": "^2.8.5",
+    "dotenv": "^17.2.2",
+    "express": "^5.1.0",
+    "express-rate-limit": "^8.1.0",
+    "helmet": "^8.1.0",
+    "mysql2": "^3.14.5",
+    "node-fetch": "^3.3.2",
+    "openai": "^4.20.1",
+    "uuid": "^9.0.1"
+  }
+}

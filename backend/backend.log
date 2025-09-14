@@ -1,0 +1,73 @@
+
+> shelterconnect-ai-backend@1.0.0 start
+> node server.js
+
+[dotenv@17.2.2] injecting env (17) from .env -- tip: 🔐 encrypt with Dotenvx: https://dotenvx.com
+🔧 Backend Configuration: {
+  port: '3000',
+  nodeEnv: 'development',
+  frontendUrl: 'http://localhost:5173',
+  database: {
+    host: 'gateway01.ap-southeast-1.prod.aws.tidbcloud.com',
+    database: 'test',
+    port: 4000
+  },
+  enableMockData: false,
+  enableApiLogging: true,
+  rebalanceThreshold: 0.8
+}
+Ignoring invalid configuration option passed to Connection: acquireTimeout. This is currently a warning, but in future versions of MySQL2, an error will be thrown if you pass an invalid configuration option to a Connection
+🚀 ShelterConnect AI Backend running on port 3000
+📊 Dashboard: http://localhost:3000/api/dashboard
+🏠 Shelters: http://localhost:3000/api/shelters
+👥 Requests: http://localhost:3000/api/requests
+🤖 Agents: http://localhost:3000/api/agents
+💚 Health: http://localhost:3000/health
+🔧 Development mode - Environment: development
+🔧 Mock data: disabled
+🔧 API logging: enabled
+✅ Database connected successfully
+Error fetching requests: Error: Error fetching requests: Incorrect arguments to LIMIT
+    at Request.findAll (file:///Users/joe/Documents/GitHub/shelterconnect/backend/models/Request.js:59:13)
+    at process.processTicksAndRejections (node:internal/process/task_queues:105:5)
+    at async getRequests (file:///Users/joe/Documents/GitHub/shelterconnect/backend/controllers/intakeController.js:106:18)
+No OpenAI API key found, returning mock embedding
+Generated embedding for request: 30001
+No OpenAI API key found, returning mock embedding
+Generated embedding for request: 30002
+Error fetching requests: Error: Error fetching requests: Incorrect arguments to LIMIT
+    at Request.findAll (file:///Users/joe/Documents/GitHub/shelterconnect/backend/models/Request.js:59:13)
+    at process.processTicksAndRejections (node:internal/process/task_queues:105:5)
+    at async getRequests (file:///Users/joe/Documents/GitHub/shelterconnect/backend/controllers/intakeController.js:106:18)
+Error fetching agent logs: Error: Error fetching recent agent logs: Incorrect arguments to LIMIT
+    at AgentLog.getRecent (file:///Users/joe/Documents/GitHub/shelterconnect/backend/models/AgentLog.js:168:13)
+    at process.processTicksAndRejections (node:internal/process/task_queues:105:5)
+    at async file:///Users/joe/Documents/GitHub/shelterconnect/backend/routes/agents.js:56:14
+Error fetching requests: Error: Error fetching requests: Incorrect arguments to LIMIT
+    at Request.findAll (file:///Users/joe/Documents/GitHub/shelterconnect/backend/models/Request.js:59:13)
+    at process.processTicksAndRejections (node:internal/process/task_queues:105:5)
+    at async getRequests (file:///Users/joe/Documents/GitHub/shelterconnect/backend/controllers/intakeController.js:106:18)
+Error fetching agent logs: Error: Error fetching recent agent logs: Incorrect arguments to LIMIT
+    at AgentLog.getRecent (file:///Users/joe/Documents/GitHub/shelterconnect/backend/models/AgentLog.js:168:13)
+    at process.processTicksAndRejections (node:internal/process/task_queues:105:5)
+    at async file:///Users/joe/Documents/GitHub/shelterconnect/backend/routes/agents.js:56:14
+Error fetching real-time data: Error: Error fetching requests: Incorrect arguments to LIMIT
+    at Request.findAll (file:///Users/joe/Documents/GitHub/shelterconnect/backend/models/Request.js:59:13)
+    at process.processTicksAndRejections (node:internal/process/task_queues:105:5)
+    at async file:///Users/joe/Documents/GitHub/shelterconnect/backend/routes/dashboard.js:70:28
+Error fetching real-time data: Error: Error fetching requests: Incorrect arguments to LIMIT
+    at Request.findAll (file:///Users/joe/Documents/GitHub/shelterconnect/backend/models/Request.js:59:13)
+    at process.processTicksAndRejections (node:internal/process/task_queues:105:5)
+    at async file:///Users/joe/Documents/GitHub/shelterconnect/backend/routes/dashboard.js:70:28
+Error fetching real-time data: Error: Error fetching requests: Incorrect arguments to LIMIT
+    at Request.findAll (file:///Users/joe/Documents/GitHub/shelterconnect/backend/models/Request.js:59:13)
+    at process.processTicksAndRejections (node:internal/process/task_queues:105:5)
+    at async file:///Users/joe/Documents/GitHub/shelterconnect/backend/routes/dashboard.js:70:28
+Error fetching real-time data: Error: Error fetching requests: Incorrect arguments to LIMIT
+    at Request.findAll (file:///Users/joe/Documents/GitHub/shelterconnect/backend/models/Request.js:59:13)
+    at process.processTicksAndRejections (node:internal/process/task_queues:105:5)
+    at async file:///Users/joe/Documents/GitHub/shelterconnect/backend/routes/dashboard.js:70:28
+Error fetching real-time data: Error: Error fetching requests: Incorrect arguments to LIMIT
+    at Request.findAll (file:///Users/joe/Documents/GitHub/shelterconnect/backend/models/Request.js:59:13)
+    at process.processTicksAndRejections (node:internal/process/task_queues:105:5)
+    at async file:///Users/joe/Documents/GitHub/shelterconnect/backend/routes/dashboard.js:70:28
