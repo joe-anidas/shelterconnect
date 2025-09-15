@@ -84,6 +84,34 @@ class Request {
     }
   }
 
+  // Find requests by status
+  static async findByStatus(status) {
+    try {
+      const [rows] = await pool.execute(
+        'SELECT r.*, s.name as assigned_shelter_name FROM requests r LEFT JOIN shelters s ON r.assigned_shelter_id = s.id WHERE r.status = ? ORDER BY r.created_at DESC',
+        [status]
+      );
+      
+      return rows;
+    } catch (error) {
+      throw new Error(`Error fetching requests by status: ${error.message}`);
+    }
+  }
+
+  // Find requests by urgency
+  static async findByUrgency(urgency) {
+    try {
+      const [rows] = await pool.execute(
+        'SELECT r.*, s.name as assigned_shelter_name FROM requests r LEFT JOIN shelters s ON r.assigned_shelter_id = s.id WHERE r.urgency = ? ORDER BY r.created_at DESC',
+        [urgency]
+      );
+      
+      return rows;
+    } catch (error) {
+      throw new Error(`Error fetching requests by urgency: ${error.message}`);
+    }
+  }
+
   // Update request
   static async update(id, requestData) {
     const { 

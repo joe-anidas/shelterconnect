@@ -73,11 +73,18 @@ export default function DashboardPage() {
   };
 
   return (
-    <div className="max-w-7xl mx-auto px-4 py-6">
-      {/* Header */}
-      <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between mb-6">
-        <div>
-          <h1 className="text-3xl font-bold text-slate-900 mb-2">Coordinator Dashboard</h1>
+    <div className="min-h-screen bg-gradient-to-br from-blue-50 via-indigo-50 to-purple-50">
+      <div className="max-w-7xl mx-auto px-4 py-8">
+        {/* Header */}
+        <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between mb-8">
+          <div>
+            <div className="inline-flex items-center px-6 py-3 bg-blue-100 text-blue-800 text-sm font-medium rounded-full mb-4">
+              <Activity className="h-4 w-4 mr-2" />
+              Real-time Monitoring System
+            </div>
+            <h1 className="text-4xl lg:text-5xl font-bold bg-gradient-to-r from-slate-800 to-slate-600 bg-clip-text text-transparent mb-3">
+              Coordinator Dashboard
+            </h1>
           <p className="text-slate-600">Real-time shelter coordination and agent activity monitoring</p>
         </div>
         
@@ -216,6 +223,7 @@ export default function DashboardPage() {
           </div>
         </div>
       </div>
+    </div>
     </div>
   );
 }

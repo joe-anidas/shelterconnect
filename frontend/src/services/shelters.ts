@@ -81,3 +81,8 @@ export const getShelterStats = async (): Promise<ShelterStats> => {
   const response = await api.get<{ success: boolean; stats: ShelterStats }>('/shelters/stats/overview');
   return response.stats;
 };
+
+// Delete shelter
+export const deleteShelter = async (id: number): Promise<void> => {
+  await api.delete(`/shelters/${id}`);
+};

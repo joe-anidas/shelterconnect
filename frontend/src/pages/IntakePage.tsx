@@ -5,13 +5,13 @@ import { createRequest, findBestMatch as findBestMatchRequest, calculateRoute } 
 
 export default function IntakePage() {
   const [form, setForm] = useState({
-    name: 'Sarah Johnson',
-    people_count: 3,
+    name: 'Johnson Family',
+    people_count: 4,
     needs: 'Family with elderly mother (75) who needs wheelchair access and daily medication. Also have a small dog.',
     features_required: ['wheelchair', 'elderly-care', 'pet-friendly'] as string[],
     lat: '13.0827',
     lng: '80.2707',
-    phone: '(555) 123-4567',
+    phone: '+91 9876543210',
     urgency: 'high'
   });
   
@@ -110,40 +110,46 @@ export default function IntakePage() {
 
   if (step === 'processing') {
     return (
-      <div className="max-w-2xl mx-auto px-4 py-12">
-        <div className="bg-white rounded-xl shadow-sm border border-slate-200 p-8 text-center">
-          <Loader className="h-12 w-12 text-blue-600 animate-spin mx-auto mb-4" />
-          <h2 className="text-2xl font-bold text-slate-900 mb-2">Processing Request</h2>
-          <p className="text-slate-600 mb-6">Our AI agents are finding the best shelter match...</p>
-          
-          <div className="space-y-3 text-left max-w-sm mx-auto">
-            <div className="flex items-center text-sm">
-              {currentStep >= 2 ? (
-                <CheckCircle className="h-4 w-4 text-green-500 mr-2" />
-              ) : (
-                <Loader className="h-4 w-4 text-blue-500 animate-spin mr-2" />
-              )}
-              <span>Intake agent: Request received</span>
+      <div className="min-h-screen bg-gradient-to-br from-blue-50 via-indigo-50 to-purple-50 py-12">
+        <div className="max-w-2xl mx-auto px-4">
+          <div className="bg-white/95 backdrop-blur-sm rounded-2xl shadow-xl border border-slate-200/50 p-8 text-center">
+            <div className="w-16 h-16 bg-gradient-to-br from-blue-500 to-purple-600 rounded-2xl flex items-center justify-center mx-auto mb-6">
+              <Loader className="h-8 w-8 text-white animate-spin" />
             </div>
-            <div className="flex items-center text-sm">
-              {currentStep >= 3 ? (
-                <CheckCircle className="h-4 w-4 text-green-500 mr-2" />
-              ) : currentStep === 2 ? (
-                <Loader className="h-4 w-4 text-blue-500 animate-spin mr-2" />
-              ) : (
-                <Clock className="h-4 w-4 text-slate-400 mr-2" />
-              )}
-              <span>Matching agent: Finding best shelter</span>
-            </div>
-            <div className="flex items-center text-sm">
-              {currentStep >= 4 ? (
-                <CheckCircle className="h-4 w-4 text-green-500 mr-2" />
-              ) : currentStep === 3 ? (
-                <Loader className="h-4 w-4 text-blue-500 animate-spin mr-2" />
-              ) : (
-                <Clock className="h-4 w-4 text-slate-400 mr-2" />
-              )}
-              <span>Routing agent: Calculating distances</span>
+            <h2 className="text-3xl font-bold bg-gradient-to-r from-slate-800 to-slate-600 bg-clip-text text-transparent mb-3">
+              Processing Request
+            </h2>
+            <p className="text-slate-600 mb-8 text-lg">Our AI agents are finding the best shelter match...</p>
+            
+            <div className="space-y-4 text-left max-w-sm mx-auto">
+              <div className="flex items-center text-sm bg-slate-50 p-3 rounded-xl">
+                {currentStep >= 2 ? (
+                  <CheckCircle className="h-5 w-5 text-green-500 mr-3" />
+                ) : (
+                  <Loader className="h-5 w-5 text-blue-500 animate-spin mr-3" />
+                )}
+                <span className="font-medium">Intake agent: Request received</span>
+              </div>
+              <div className="flex items-center text-sm bg-slate-50 p-3 rounded-xl">
+                {currentStep >= 3 ? (
+                  <CheckCircle className="h-5 w-5 text-green-500 mr-3" />
+                ) : currentStep === 2 ? (
+                  <Loader className="h-5 w-5 text-blue-500 animate-spin mr-3" />
+                ) : (
+                  <Clock className="h-5 w-5 text-slate-400 mr-3" />
+                )}
+                <span className="font-medium">Matching agent: Finding best shelter</span>
+              </div>
+              <div className="flex items-center text-sm bg-slate-50 p-3 rounded-xl">
+                {currentStep >= 4 ? (
+                  <CheckCircle className="h-5 w-5 text-green-500 mr-3" />
+                ) : currentStep === 3 ? (
+                  <Loader className="h-5 w-5 text-blue-500 animate-spin mr-3" />
+                ) : (
+                  <Clock className="h-5 w-5 text-slate-400 mr-3" />
+                )}
+                <span className="font-medium">Routing agent: Calculating distances</span>
+              </div>
             </div>
           </div>
         </div>
@@ -153,19 +159,24 @@ export default function IntakePage() {
 
   if (step === 'assigned' && assignment) {
     return (
-      <div className="max-w-2xl mx-auto px-4 py-12">
-        <div className="bg-white rounded-xl shadow-sm border border-slate-200 p-8">
-          <div className="text-center mb-6">
-            <CheckCircle className="h-16 w-16 text-green-500 mx-auto mb-4" />
-            <h2 className="text-2xl font-bold text-slate-900 mb-2">Shelter Assigned!</h2>
-            <p className="text-slate-600">
-              {form.name}, your family of {form.people_count} has been assigned to the following shelter:
-            </p>
-          </div>
+      <div className="min-h-screen bg-gradient-to-br from-blue-50 via-indigo-50 to-purple-50 py-12">
+        <div className="max-w-2xl mx-auto px-4">
+          <div className="bg-white/95 backdrop-blur-sm rounded-2xl shadow-xl border border-slate-200/50 p-8">
+            <div className="text-center mb-8">
+              <div className="w-20 h-20 bg-gradient-to-br from-green-400 to-emerald-500 rounded-2xl flex items-center justify-center mx-auto mb-6">
+                <CheckCircle className="h-10 w-10 text-white" />
+              </div>
+              <h2 className="text-3xl font-bold bg-gradient-to-r from-slate-800 to-slate-600 bg-clip-text text-transparent mb-3">
+                Shelter Assigned!
+              </h2>
+              <p className="text-slate-600 text-lg">
+                {form.name}, your family of {form.people_count} has been assigned to the following shelter:
+              </p>
+            </div>
 
-          <ShelterCard shelter={assignment} onClick={() => {}} showDistance />
+            <ShelterCard shelter={assignment} onClick={() => {}} showDistance />
 
-          <div className="mt-6 p-4 bg-blue-50 rounded-lg">
+            <div className="mt-8 p-6 bg-gradient-to-r from-blue-50 to-indigo-50 rounded-2xl border border-blue-200/50">
             <h3 className="font-semibold text-slate-900 mb-2">Next Steps:</h3>
             <ul className="text-sm text-slate-700 space-y-1">
               <li>• Please arrive at the shelter within the next 2 hours</li>
@@ -195,25 +206,33 @@ export default function IntakePage() {
             >
               Submit Another Request
             </button>
-            <button className="flex-1 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors">
+            <button className="flex-1 px-4 py-2 bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 text-white rounded-xl shadow-lg hover:shadow-xl transition-all transform hover:scale-105 font-semibold">
               View on Map
             </button>
           </div>
         </div>
       </div>
+      </div>
     );
   }
 
   return (
-    <div className="max-w-2xl mx-auto px-4 py-12">
-      <div className="mb-8">
-        <h1 className="text-3xl font-bold text-slate-900 mb-2">Emergency Shelter Request</h1>
-        <p className="text-slate-600">
-          Fill out this form to request emergency shelter placement. Our AI system will find the best match for your family's needs.
-        </p>
-      </div>
+    <div className="min-h-screen bg-gradient-to-br from-blue-50 via-indigo-50 to-purple-50 py-12">
+      <div className="max-w-2xl mx-auto px-4">
+        <div className="text-center mb-12">
+          <div className="inline-flex items-center px-6 py-3 bg-blue-100 text-blue-800 text-sm font-medium rounded-full mb-6">
+            <Users className="h-4 w-4 mr-2" />
+            AI-Powered Emergency Response
+          </div>
+          <h1 className="text-4xl lg:text-5xl font-bold bg-gradient-to-r from-slate-800 to-slate-600 bg-clip-text text-transparent mb-4">
+            Emergency Shelter Request
+          </h1>
+          <p className="text-xl text-slate-600 max-w-lg mx-auto">
+            Fill out this form to request emergency shelter placement. Our AI system will find the best match for your family's needs.
+          </p>
+        </div>
 
-      <form onSubmit={handleSubmit} className="bg-white rounded-xl shadow-sm border border-slate-200 p-8 space-y-6">
+        <form onSubmit={handleSubmit} className="bg-white/95 backdrop-blur-sm rounded-2xl shadow-xl border border-slate-200/50 p-8 space-y-8">
         {/* Family Information */}
         <div>
           <h3 className="text-lg font-semibold text-slate-900 mb-4 flex items-center">
@@ -394,6 +413,7 @@ export default function IntakePage() {
           You'll receive shelter assignment details within minutes.
         </p>
       </form>
+    </div>
     </div>
   );
 }
