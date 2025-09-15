@@ -44,7 +44,15 @@ export const config = {
   logLevel: process.env.LOG_LEVEL || 'info',
   
   // Security
-  corsOrigins: process.env.CORS_ORIGINS ? process.env.CORS_ORIGINS.split(',') : [process.env.FRONTEND_URL || 'http://localhost:5173'],
+  corsOrigins: process.env.CORS_ORIGINS ? 
+    process.env.CORS_ORIGINS.split(',') : 
+    [
+      process.env.FRONTEND_URL || 'http://localhost:5173',
+      'http://localhost:3000',
+      'http://localhost:5174',
+      'https://shelterconnect.vercel.app',
+      'https://*.vercel.app'
+    ],
 };
 
 // Validate required configuration

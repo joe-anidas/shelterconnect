@@ -13,7 +13,8 @@ class ApiService {
 
   private async request<T>(
     endpoint: string,
-    options: RequestInit = {}
+    options: RequestInit = {},
+    retryCount = 0
   ): Promise<T> {
     const url = `${this.baseURL}${endpoint}`;
     
@@ -22,23 +23,40 @@ class ApiService {
         'Content-Type': 'application/json',
         ...options.headers,
       },
+      // Add credentials for CORS
+      credentials: 'include',
+      // Add mode for CORS
+      mode: 'cors',
       ...options,
     };
 
     // Log API requests in development
     if (config.enableApiLogging) {
       console.log(`🌐 API Request: ${options.method || 'GET'} ${url}`);
+      console.log(`🔧 Request config:`, requestConfig);
     }
 
     try {
       const response = await fetch(url, requestConfig);
       
       if (!response.ok) {
+        // Handle specific CORS and network errors
+        if (response.status === 0 && retryCount < 2) {
+          console.log(`🔄 Retrying request (${retryCount + 1}/3)...`);
+          await new Promise(resolve => setTimeout(resolve, 1000 * (retryCount + 1)));
+          return this.request(endpoint, options, retryCount + 1);
+        }
+        
         const errorData = await response.json().catch(() => ({}));
         const errorMessage = errorData.error || `HTTP error! status: ${response.status}`;
         
         if (config.enableApiLogging) {
-          console.error(`❌ API Error: ${errorMessage}`, errorData);
+          console.error(`❌ API Error: ${errorMessage}`, {
+            status: response.status,
+            statusText: response.statusText,
+            url,
+            errorData
+          });
         }
         
         throw new Error(errorMessage);
@@ -54,7 +72,16 @@ class ApiService {
     } catch (error) {
       if (config.enableApiLogging) {
         console.error('❌ API request failed:', error);
+        console.error('🔧 Request details:', { url, method: options.method || 'GET', retryCount });
       }
+      
+      // Handle network errors and CORS issues
+      if (error instanceof TypeError && error.message.includes('Failed to fetch')) {
+        const corsError = new Error(`Network error: Unable to reach ${this.baseURL}. This might be due to CORS policy or server being down.`);
+        corsError.name = 'NetworkError';
+        throw corsError;
+      }
+      
       throw error;
     }
   }
