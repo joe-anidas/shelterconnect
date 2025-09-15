@@ -17,6 +17,14 @@ import {
   getRebalancingHistory, 
   getCapacityAlerts 
 } from '../controllers/rebalanceController.js';
+import { 
+  executeWorkflow, 
+  getWorkflowStatus 
+} from '../controllers/multiStepAgentController.js';
+import { 
+  executeDemoWorkflow, 
+  getDemoWorkflowStatus 
+} from '../controllers/demoMultiStepAgentController.js';
 import AgentLog from '../models/AgentLog.js';
 
 const router = express.Router();
@@ -36,6 +44,14 @@ router.get('/rebalance/monitor', monitorOccupancy);
 router.post('/rebalance/execute', executeRebalancing);
 router.get('/rebalance/history', getRebalancingHistory);
 router.get('/rebalance/alerts', getCapacityAlerts);
+
+// 🎯 Multi-Step Agent Workflow Routes - TiDB Vector Search Showcase
+router.post('/workflow/execute/:requestId', executeWorkflow);
+router.get('/workflow/status/:requestId', getWorkflowStatus);
+
+// 🎯 Demo Multi-Step Agent Workflow Routes - Working with existing schema
+router.post('/demo-workflow/execute/:requestId', executeDemoWorkflow);
+router.get('/demo-workflow/status/:requestId', getDemoWorkflowStatus);
 
 // Agent Logs routes
 router.get('/logs', async (req, res) => {

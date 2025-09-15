@@ -8,7 +8,14 @@ class AgentLog {
     try {
       const [result] = await pool.execute(
         'INSERT INTO agent_logs (agent_name, action, status, request_id, shelter_id, details) VALUES (?, ?, ?, ?, ?, ?)',
-        [agent_name, action, status, request_id, shelter_id, details ? JSON.stringify(details) : null]
+        [
+          agent_name, 
+          action, 
+          status, 
+          request_id || null, 
+          shelter_id || null, 
+          details ? JSON.stringify(details) : null
+        ]
       );
       
       return { id: result.insertId, ...logData, timestamp: new Date() };

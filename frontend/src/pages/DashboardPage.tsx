@@ -1,28 +1,25 @@
-import React, { useState, useEffect } from 'react';
+import { useState, useEffect } from 'react';
 import { Activity, MapPin, Users, Clock, AlertTriangle, RefreshCw } from 'lucide-react';
 import MapView from '../components/MapView';
 import RequestFeed from '../components/RequestFeed';
 import AgentLog from '../components/AgentLog';
 import RebalanceAlerts from '../components/RebalanceAlerts';
-import { getShelters, getRequestStats, getShelterStats } from '../services/shelters';
-import { getRequests } from '../services/requests';
-import { getAgentLogs } from '../services/agents';
-import { getDashboardOverview, getRealtimeData } from '../services/dashboard';
+import { getShelters, Shelter } from '../services/shelters';
+import { getRequests, Request } from '../services/requests';
+import { getAgentLogs, AgentLog as AgentLogType } from '../services/agents';
 import config from '../config/env';
 
 export default function DashboardPage() {
-  const [shelters, setShelters] = useState([]);
-  const [requests, setRequests] = useState([]);
-  const [agentLogs, setAgentLogs] = useState([]);
+  const [shelters, setShelters] = useState<Shelter[]>([]);
+  const [requests, setRequests] = useState<Request[]>([]);
+  const [agentLogs, setAgentLogs] = useState<AgentLogType[]>([]);
   const [lastUpdate, setLastUpdate] = useState(new Date());
   const [isPolling, setIsPolling] = useState(true);
-  const [loading, setLoading] = useState(true);
 
   // Load initial data
   useEffect(() => {
     const loadInitialData = async () => {
       try {
-        setLoading(true);
         const [sheltersData, requestsData, logsData] = await Promise.all([
           getShelters(),
           getRequests(50, 0),
@@ -34,8 +31,6 @@ export default function DashboardPage() {
         setAgentLogs(logsData);
       } catch (error) {
         console.error('Failed to load initial data:', error);
-      } finally {
-        setLoading(false);
       }
     };
 
@@ -44,21 +39,23 @@ export default function DashboardPage() {
 
   // Real-time updates
   useEffect(() => {
-    if (!isPolling || !config.enableRealTimeUpdates) return;
+    if (!isPolling || !config.enableRealTimeUpdates) {
+      return;
+    }
 
     const interval = setInterval(async () => {
       try {
-        const realtimeData = await getRealtimeData(lastUpdate.toISOString());
+        // Fetch latest data
+        const [latestRequests, latestLogs] = await Promise.all([
+          getRequests(10, 0),
+          getAgentLogs(10, 0)
+        ]);
         
-        if (realtimeData.updates.new_requests.length > 0) {
-          setRequests(prev => [...realtimeData.updates.new_requests, ...prev.slice(0, 40)]);
-        }
+        // Update with latest data
+        setRequests(latestRequests.slice(0, 50));
+        setAgentLogs(latestLogs.slice(0, 50));
         
-        if (realtimeData.updates.new_logs.length > 0) {
-          setAgentLogs(prev => [...realtimeData.updates.new_logs, ...prev.slice(0, 40)]);
-        }
-        
-        setLastUpdate(new Date(realtimeData.timestamp));
+        setLastUpdate(new Date());
       } catch (error) {
         console.error('Failed to fetch real-time updates:', error);
       }
@@ -171,8 +168,8 @@ export default function DashboardPage() {
             <div className="p-4">
               <MapView 
                 shelters={shelters} 
-                requests={requests.filter(r => r.status === 'pending')}
-                onShelterClick={(shelter) => console.log('Selected shelter:', shelter)}
+                requests={requests.filter((r: any) => r.status === 'pending')}
+                onShelterClick={(shelter: any) => console.log('Selected shelter:', shelter)}
               />
             </div>
           </div>
@@ -192,7 +189,12 @@ export default function DashboardPage() {
               </h2>
             </div>
             <div className="max-h-80 overflow-y-auto">
-              <RequestFeed requests={requests.slice(0, 5)} />
+              <RequestFeed requests={requests.slice(0, 5).map(r => ({
+                ...r,
+                status: r.status === 'cancelled' ? 'pending' : r.status,
+                timestamp: new Date(r.created_at),
+                assigned_shelter: r.assigned_shelter_name
+              }))} />
             </div>
           </div>
 
@@ -205,7 +207,11 @@ export default function DashboardPage() {
               </h2>
             </div>
             <div className="max-h-80 overflow-y-auto">
-              <AgentLog logs={agentLogs.slice(0, 10)} />
+              <AgentLog logs={agentLogs.slice(0, 10).map(log => ({
+                ...log,
+                timestamp: new Date(log.timestamp),
+                details: typeof log.details === 'object' ? JSON.stringify(log.details) : log.details
+              }))} />
             </div>
           </div>
         </div>

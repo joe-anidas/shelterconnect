@@ -1,11 +1,12 @@
 import React from 'react';
 import { BrowserRouter as Router, Routes, Route, Link } from 'react-router-dom';
-import { Shield, Home, Users, BarChart3, Zap } from 'lucide-react';
+import { Shield, Home, Users, BarChart3, Zap, Database } from 'lucide-react';
 import LandingPage from './pages/LandingPage';
 import IntakePage from './pages/IntakePage';
 import DashboardPage from './pages/DashboardPage';
 import SheltersPage from './pages/SheltersPage';
 import SimulatePage from './pages/SimulatePage';
+import VectorSearchDemoPage from './pages/VectorSearchDemoPage';
 
 function App() {
   return (
@@ -52,6 +53,13 @@ function App() {
                   <span>Shelters</span>
                 </Link>
                 <Link 
+                  to="/vector-demo" 
+                  className="flex items-center space-x-2 bg-green-600 hover:bg-green-700 text-white px-3 py-2 rounded-lg transition-colors"
+                >
+                  <Database className="h-4 w-4" />
+                  <span>TiDB Vector</span>
+                </Link>
+                <Link 
                   to="/simulate" 
                   className="flex items-center space-x-2 bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg transition-colors"
                 >
@@ -69,6 +77,7 @@ function App() {
           <Route path="/intake" element={<IntakePage />} />
           <Route path="/dashboard" element={<DashboardPage />} />
           <Route path="/shelters" element={<SheltersPage />} />
+          <Route path="/vector-demo" element={<VectorSearchDemoPage />} />
           <Route path="/simulate" element={<SimulatePage />} />
         </Routes>
       </div>

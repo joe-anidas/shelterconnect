@@ -26,8 +26,7 @@ interface MapViewProps {
 }
 
 export default function MapView({ shelters, requests = [], onShelterClick }: MapViewProps) {
-  // Since we don't have access to a full mapping library in this demo,
-  // we'll create a simplified visual representation
+  // Enhanced coordinate-based map visualization with satellite-style background
   
   // Convert string coordinates to numbers and filter out invalid ones
   const validShelters = shelters.filter(s => s.lat != null && s.lng != null);
@@ -42,17 +41,17 @@ export default function MapView({ shelters, requests = [], onShelterClick }: Map
   const allLats = [...shelterLats, ...requestLats];
   const allLngs = [...shelterLngs, ...requestLngs];
   
-  // If no valid coordinates, use default bounds
+  // Default to Chennai, India if no valid coordinates
   const mapBounds = allLats.length > 0 && allLngs.length > 0 ? {
-    minLat: Math.min(...allLats) - 0.01,
-    maxLat: Math.max(...allLats) + 0.01,
-    minLng: Math.min(...allLngs) - 0.01,
-    maxLng: Math.max(...allLngs) + 0.01,
+    minLat: Math.min(...allLats) - 0.05,
+    maxLat: Math.max(...allLats) + 0.05,
+    minLng: Math.min(...allLngs) - 0.05,
+    maxLng: Math.max(...allLngs) + 0.05,
   } : {
-    minLat: 13.04,
-    maxLat: 13.11,
-    minLng: 80.24,
-    maxLng: 80.29,
+    minLat: 12.8,  // South Chennai
+    maxLat: 13.2,  // North Chennai
+    minLng: 80.0,  // West Chennai
+    maxLng: 80.4,  // East Chennai (Bay of Bengal)
   };
 
   const normalizePosition = (lat: number, lng: number) => {
@@ -72,15 +71,34 @@ export default function MapView({ shelters, requests = [], onShelterClick }: Map
   };
 
   return (
-    <div className="relative w-full h-96 bg-gradient-to-br from-blue-50 to-slate-100 rounded-lg border border-slate-200 overflow-hidden">
-      {/* Grid Pattern */}
+    <div className="relative w-full h-[500px] bg-gray-200 rounded-lg border border-slate-300 overflow-hidden shadow-lg">
+      {/* India Map Background */}
       <div 
         className="absolute inset-0 opacity-20"
         style={{
-          backgroundImage: 'radial-gradient(circle, #64748b 1px, transparent 1px)',
-          backgroundSize: '20px 20px'
+          backgroundImage: `url('https://upload.wikimedia.org/wikipedia/commons/8/84/India-map.png')`,
+          backgroundSize: 'contain',
+          backgroundPosition: 'center',
+          backgroundRepeat: 'no-repeat',
         }}
       />
+      
+      {/* Road Map Grid Lines */}
+      <div 
+        className="absolute inset-0 opacity-15"
+        style={{
+          backgroundImage: `
+            linear-gradient(rgba(0,0,0,0.2) 1px, transparent 1px),
+            linear-gradient(90deg, rgba(0,0,0,0.2) 1px, transparent 1px)
+          `,
+          backgroundSize: '30px 30px',
+        }}
+      />
+      
+      {/* Map Title */}
+      <div className="absolute top-4 left-4 bg-white bg-opacity-80 p-2 rounded-md shadow">
+        <h3 className="font-bold text-lg text-slate-800">Shelter Map - Chennai Area</h3>
+      </div>
 
       {/* Map Legend */}
       <div className="absolute top-4 left-4 bg-white rounded-lg p-3 shadow-sm border border-slate-200 z-10">
