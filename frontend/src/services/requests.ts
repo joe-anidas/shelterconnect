@@ -12,7 +12,7 @@ export interface Request {
   lng: number;
   phone: string;
   urgency: 'low' | 'medium' | 'high';
-  status: 'pending' | 'assigned' | 'completed' | 'cancelled';
+  status: 'pending' | 'assigned' | 'completed' | 'cancelled' | 'resolved';
   assigned_shelter_id?: number;
   assigned_shelter_name?: string;
   assigned_at?: string;
@@ -89,6 +89,7 @@ export interface MatchResult {
   lng: number;
   available_beds: number;
   features: string[];
+  phone?: string;
 }
 
 export const findBestMatch = async (requestData: {
@@ -118,4 +119,21 @@ export const calculateRoute = async (requestData: {
 }): Promise<RouteResult> => {
   const response = await api.post<{ success: boolean; route: RouteResult }>('/requests/route', requestData);
   return response.route;
+};
+
+// Accept arrival: mark request completed and increment shelter occupancy
+export const acceptArrival = async (id: number): Promise<{ new_occupancy: number } | void> => {
+  const response = await api.post<{ success: boolean; new_occupancy: number }>(`/requests/${id}/arrival`);
+  return { new_occupancy: response.new_occupancy };
+};
+
+// Resolve request with shelter assignment
+export const resolveRequest = async (id: number, shelterId: number): Promise<{ newOccupancy: number }> => {
+  const response = await api.post<{ success: boolean; newOccupancy: number }>(`/requests/${id}/resolve`, { shelterId });
+  return { newOccupancy: response.newOccupancy };
+};
+
+// Delete request
+export const deleteRequest = async (id: number): Promise<void> => {
+  await api.delete(`/requests/${id}`);
 };

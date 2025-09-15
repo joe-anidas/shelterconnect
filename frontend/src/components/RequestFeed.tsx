@@ -6,23 +6,32 @@ interface Request {
   name: string;
   people_count: number;
   needs: string;
-  status: 'pending' | 'assigned' | 'completed';
+  status: 'pending' | 'assigned' | 'completed' | 'resolved' | 'cancelled';
   timestamp: Date;
   lat?: number;
   lng?: number;
   urgency?: 'low' | 'medium' | 'high';
   assigned_shelter?: string;
+  assigned_shelter_id?: number;
+  original_status?: string;
 }
 
 interface RequestFeedProps {
   requests: Request[];
+  onAcceptArrival?: (requestId: number) => void;
+  onDeleteRequest?: (requestId: number) => void;
+  onLeavePending?: (requestId: number) => void;
+  onResolveRequest?: (requestId: number, requestName: string, peopleCount: number, currentAssignedShelter?: string, currentAssignedShelterId?: number) => void;
+  title?: string;
 }
 
-export default function RequestFeed({ requests }: RequestFeedProps) {
+export default function RequestFeed({ requests, onAcceptArrival, onDeleteRequest, onLeavePending, onResolveRequest, title }: RequestFeedProps) {
   const getStatusIcon = (status: string) => {
     switch (status) {
       case 'completed':
         return <CheckCircle className="h-4 w-4 text-green-500" />;
+      case 'resolved':
+        return <CheckCircle className="h-4 w-4 text-green-600" />;
       case 'assigned':
         return <CheckCircle className="h-4 w-4 text-blue-500" />;
       default:
@@ -46,30 +55,22 @@ export default function RequestFeed({ requests }: RequestFeedProps) {
     if (!(ts instanceof Date) || isNaN(ts.getTime())) {
       return '';
     }
-    const now = new Date();
-    const diff = now.getTime() - ts.getTime();
-    const minutes = Math.floor(diff / 60000);
-
-    if (minutes < 1) {
-      return 'Just now';
-    }
-    if (minutes < 60) {
-      return `${minutes}m ago`;
-    }
-
-    const hours = Math.floor(minutes / 60);
-    if (hours < 24) {
-      return `${hours}h ago`;
-    }
-
-    return ts.toLocaleDateString();
+    return ts.toLocaleString('en-IN', {
+      timeZone: 'Asia/Kolkata',
+      year: 'numeric',
+      month: 'short',
+      day: '2-digit',
+      hour: '2-digit',
+      minute: '2-digit',
+      hour12: true
+    });
   };
 
   if (requests.length === 0) {
     return (
       <div className="p-6 text-center text-slate-500">
         <Users className="h-12 w-12 mx-auto mb-2 opacity-50" />
-        <p>No requests at the moment</p>
+        <p>No {title || 'requests'} at the moment</p>
         <p className="text-xs mt-1">New requests will appear here in real-time</p>
       </div>
     );
@@ -130,23 +131,79 @@ export default function RequestFeed({ requests }: RequestFeedProps) {
                     → Assigned to {request.assigned_shelter}
                   </div>
                 )}
+
+                {request.status === 'pending' && (
+                  <div className="text-[11px] text-slate-500">
+                    {request.original_status === 'cancelled' 
+                      ? 'Showing here for visibility (was cancelled)' 
+                      : 'Awaiting assignment'}
+                  </div>
+                )}
               </div>
 
               {/* Timestamp */}
               <div className="mt-2 text-xs text-slate-400">
-                {formatTimestamp(request.timestamp)}
+                {formatTimestamp(request.timestamp)} IST
               </div>
             </div>
+            <div className="ml-3 flex flex-col items-end space-y-2">
+              {/* Status Badge */}
+              <div className={`px-2 py-1 text-xs font-medium rounded ${
+                request.status === 'completed' 
+                  ? 'bg-green-100 text-green-700' 
+                  : request.status === 'resolved'
+                  ? 'bg-green-200 text-green-800'
+                  : request.status === 'assigned'
+                  ? 'bg-blue-100 text-blue-700'
+                  : 'bg-yellow-100 text-yellow-700'
+              }`}>
+                {request.status}
+              </div>
 
-            {/* Status Badge */}
-            <div className={`ml-3 px-2 py-1 text-xs font-medium rounded ${
-              request.status === 'completed' 
-                ? 'bg-green-100 text-green-700' 
-                : request.status === 'assigned'
-                ? 'bg-blue-100 text-blue-700'
-                : 'bg-yellow-100 text-yellow-700'
-            }`}>
-              {request.status}
+              {/* Resolved Button */}
+              {onResolveRequest && request.status !== 'resolved' && request.status !== 'completed' && (
+                <button
+                  className="px-2 py-1 text-xs rounded bg-blue-600 text-white hover:bg-blue-700"
+                  onClick={() => onResolveRequest(
+                    request.id, 
+                    request.name, 
+                    request.people_count, 
+                    request.assigned_shelter,
+                    request.assigned_shelter_id
+                  )}
+                >
+                  Resolved
+                </button>
+              )}
+
+              {/* Accept Arrival Button */}
+              {onAcceptArrival && (request.assigned_shelter || request.original_status === 'assigned') && (
+                <button
+                  className="px-2 py-1 text-xs rounded bg-green-600 text-white hover:bg-green-700"
+                  onClick={() => onAcceptArrival(request.id)}
+                >
+                  Accept Arrival
+                </button>
+              )}
+              {onAcceptArrival && request.status === 'pending' && !request.assigned_shelter && (
+                <div className="text-[11px] text-slate-500">Assign a shelter to mark arrival</div>
+              )}
+              {onLeavePending && (
+                <button
+                  className="px-2 py-1 text-xs rounded bg-slate-200 text-slate-700 hover:bg-slate-300"
+                  onClick={() => onLeavePending(request.id)}
+                >
+                  Leave Pending
+                </button>
+              )}
+              {onDeleteRequest && (
+                <button
+                  className="px-2 py-1 text-xs rounded bg-red-600 text-white hover:bg-red-700"
+                  onClick={() => onDeleteRequest(request.id)}
+                >
+                  Delete
+                </button>
+              )}
             </div>
           </div>
         </div>

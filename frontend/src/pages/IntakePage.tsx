@@ -1,23 +1,38 @@
-import React, { useState } from 'react';
-import { Users, MapPin, Phone, Clock, CheckCircle, Loader } from 'lucide-react';
+import React, { useState, useMemo } from 'react';
+import { Users, MapPin, Phone, Clock, CheckCircle, Loader, Navigation } from 'lucide-react';
+import { MapContainer, TileLayer, Marker, Polyline, useMap } from 'react-leaflet';
+import { Icon, LatLngExpression, LatLngBoundsExpression } from 'leaflet';
+import 'leaflet/dist/leaflet.css';
+import markerIcon from 'leaflet/dist/images/marker-icon.png';
+import markerShadow from 'leaflet/dist/images/marker-shadow.png';
+import markerRetinaIcon from 'leaflet/dist/images/marker-icon-2x.png';
 import ShelterCard from '../components/ShelterCard';
 import { createRequest, findBestMatch as findBestMatchRequest, calculateRoute } from '../services/requests';
+import { getShelterById } from '../services/shelters';
 
 export default function IntakePage() {
   const [form, setForm] = useState({
-    name: 'Johnson Family',
+    name: 'Raghavan Family',
     people_count: 4,
     needs: 'Family with elderly mother (75) who needs wheelchair access and daily medication. Also have a small dog.',
     features_required: ['wheelchair', 'elderly-care', 'pet-friendly'] as string[],
-    lat: '13.0827',
+    lat: '13.0627',
     lng: '80.2707',
     phone: '+91 9876543210',
     urgency: 'high'
   });
   
   const [loading, setLoading] = useState(false);
+  const [locating, setLocating] = useState(false);
+  const [geoError, setGeoError] = useState<string | null>(null);
   const [currentStep, setCurrentStep] = useState(1);
   const [assignment, setAssignment] = useState<any>(null);
+  const [route, setRoute] = useState<{
+    distance_km: number;
+    duration_minutes: number;
+    route_points: Array<{ lat: number; lng: number }>;
+    instructions: string[];
+  } | null>(null);
   const [step, setStep] = useState('form'); // 'form', 'processing', 'assigned'
 
   const urgencyOptions = [
@@ -37,6 +52,43 @@ export default function IntakePage() {
         ? prev.features_required.filter(f => f !== feature)
         : [...prev.features_required, feature]
     }));
+  };
+
+  const useCurrentLocation = () => {
+    if (!('geolocation' in navigator)) {
+      setGeoError('Geolocation is not supported by your browser.');
+      return;
+    }
+    setGeoError(null);
+    setLocating(true);
+    navigator.geolocation.getCurrentPosition(
+      (position) => {
+        const { latitude, longitude } = position.coords;
+        setForm((prev) => ({
+          ...prev,
+          lat: latitude.toFixed(6),
+          lng: longitude.toFixed(6)
+        }));
+        setLocating(false);
+      },
+      (error) => {
+        const message =
+          error.code === error.PERMISSION_DENIED
+            ? 'Location permission denied. Please allow access or enter coordinates manually.'
+            : error.code === error.POSITION_UNAVAILABLE
+            ? 'Location information is unavailable. Try again later.'
+            : error.code === error.TIMEOUT
+            ? 'Fetching location timed out. Try again.'
+            : 'Unable to fetch current location.';
+        setGeoError(message);
+        setLocating(false);
+      },
+      {
+        enableHighAccuracy: true,
+        timeout: 10000,
+        maximumAge: 0
+      }
+    );
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -62,7 +114,7 @@ export default function IntakePage() {
       
       // Step 2: Find best match (Matching Agent)
       setCurrentStep(3);
-      const matchResult = await findBestMatchRequest({
+      const matchResult: any = await findBestMatchRequest({
         lat: parseFloat(form.lat),
         lng: parseFloat(form.lng),
         people_count: form.people_count,
@@ -70,28 +122,32 @@ export default function IntakePage() {
         urgency: form.urgency
       });
       
+      // Fetch full shelter details so UI reflects backend data exactly
+      const shelterDetails = await getShelterById(matchResult.shelter_id);
+
       // Step 3: Calculate route (Routing Agent)
       setCurrentStep(4);
       const routeResult = await calculateRoute({
         origin_lat: parseFloat(form.lat),
         origin_lng: parseFloat(form.lng),
-        destination_lat: matchResult.lat,
-        destination_lng: matchResult.lng
+        destination_lat: shelterDetails.lat,
+        destination_lng: shelterDetails.lng
       });
+      setRoute(routeResult);
       
       // Create assignment
       const assignment = {
-        id: matchResult.shelter_id,
-        name: matchResult.shelter_name,
-        capacity: 120,
-        occupancy: 85,
-        features: matchResult.features?.join(', ') || 'Standard shelter amenities',
-        distance: `${matchResult.distance_km} km`,
+        id: shelterDetails.id,
+        name: shelterDetails.name,
+        capacity: shelterDetails.capacity,
+        occupancy: shelterDetails.occupancy,
+        features: shelterDetails.features,
+        distance: `${routeResult.distance_km} km`,
         eta: `${routeResult.duration_minutes} minutes`,
-        address: matchResult.shelter_name,
-        lat: matchResult.lat,
-        lng: matchResult.lng,
-        phone: '(555) 123-4567'
+        address: shelterDetails.address,
+        lat: shelterDetails.lat,
+        lng: shelterDetails.lng,
+        phone: shelterDetails.phone
       };
       
       setAssignment(assignment);
@@ -107,6 +163,29 @@ export default function IntakePage() {
       setLoading(false);
     }
   };
+
+  // Fix default Leaflet marker icons
+  delete (Icon.Default.prototype as any)._getIconUrl;
+  Icon.Default.mergeOptions({
+    iconRetinaUrl: markerRetinaIcon,
+    iconUrl: markerIcon,
+    shadowUrl: markerShadow,
+  });
+
+  // Helper to fit map bounds to origin, destination and route points
+  function FitToRouteBounds({ points }: { points: LatLngExpression[] }) {
+    const map = useMap();
+    const bounds = useMemo<LatLngBoundsExpression | null>(() => {
+      if (!points.length) return null;
+      return points as LatLngBoundsExpression;
+    }, [points]);
+    React.useEffect(() => {
+      if (bounds) {
+        map.fitBounds(bounds, { padding: [20, 20] });
+      }
+    }, [map, bounds]);
+    return null;
+  }
 
   if (step === 'processing') {
     return (
@@ -176,12 +255,66 @@ export default function IntakePage() {
 
             <ShelterCard shelter={assignment} onClick={() => {}} showDistance />
 
+            {/* Route Map */}
+            {route && (
+              <div className="mt-8">
+                <h3 className="font-semibold text-slate-900 mb-3 flex items-center">
+                  <Navigation className="h-5 w-5 mr-2" />
+                  Route to assigned shelter
+                </h3>
+                <div className="w-full h-[320px] rounded-xl overflow-hidden border border-slate-200">
+                  <MapContainer
+                    center={[parseFloat(form.lat), parseFloat(form.lng)] as LatLngExpression}
+                    zoom={12}
+                    style={{ height: '100%', width: '100%' }}
+                    zoomControl={true}
+                  >
+                    <TileLayer
+                      attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
+                      url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
+                    />
+                    {/* Fit bounds to include origin, destination, and route polyline */}
+                    <FitToRouteBounds
+                      points={[
+                        [parseFloat(form.lat), parseFloat(form.lng)],
+                        [assignment.lat, assignment.lng],
+                        ...route.route_points.map(p => [p.lat, p.lng])
+                      ] as unknown as LatLngExpression[]}
+                    />
+                    {/* Origin marker */}
+                    <Marker position={[parseFloat(form.lat), parseFloat(form.lng)] as LatLngExpression} />
+                    {/* Destination marker */}
+                    <Marker position={[assignment.lat, assignment.lng] as LatLngExpression} />
+                    {/* Route polyline */}
+                    <Polyline
+                      pathOptions={{ color: '#2563eb', weight: 5, opacity: 0.85 }}
+                      positions={route.route_points.map(p => [p.lat, p.lng]) as unknown as LatLngExpression[]}
+                    />
+                  </MapContainer>
+                </div>
+                <div className="mt-3 text-sm text-slate-700 flex items-center justify-between">
+                  <div>
+                    <span className="font-medium">Distance:</span> {route.distance_km} km
+                    <span className="ml-4 font-medium">ETA:</span> {route.duration_minutes} mins
+                  </div>
+                  <a
+                    href={`https://www.google.com/maps/dir/?api=1&origin=${encodeURIComponent(form.lat + ',' + form.lng)}&destination=${encodeURIComponent(assignment.lat + ',' + assignment.lng)}&travelmode=driving`}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="inline-flex items-center px-3 py-2 text-xs rounded-lg bg-blue-600 text-white hover:bg-blue-700"
+                  >
+                    Open in Google Maps
+                  </a>
+                </div>
+              </div>
+            )}
+
             <div className="mt-8 p-6 bg-gradient-to-r from-blue-50 to-indigo-50 rounded-2xl border border-blue-200/50">
             <h3 className="font-semibold text-slate-900 mb-2">Next Steps:</h3>
             <ul className="text-sm text-slate-700 space-y-1">
               <li>• Please arrive at the shelter within the next 2 hours</li>
               <li>• Bring identification and any essential medications</li>
-              <li>• Call {assignment.phone || '(555) 123-4567'} if you need directions</li>
+              <li>• Call {assignment.phone} if you need directions</li>
               <li>• Check-in at the front desk upon arrival</li>
             </ul>
           </div>
@@ -192,13 +325,13 @@ export default function IntakePage() {
                 setStep('form');
                 setAssignment(null);
                 setForm({
-                  name: 'Sarah Johnson',
+                  name: 'Lakshmi Iyer',
                   people_count: 3,
                   needs: 'Family with elderly mother (75) who needs wheelchair access and daily medication. Also have a small dog.',
                   features_required: ['wheelchair', 'elderly-care', 'pet-friendly'],
-                  lat: '13.0827',
+                  lat: '13.0627',
                   lng: '80.2707',
-                  phone: '(555) 123-4567',
+                  phone: '+91 9876543211',
                   urgency: 'high'
                 });
               }}
@@ -206,9 +339,14 @@ export default function IntakePage() {
             >
               Submit Another Request
             </button>
-            <button className="flex-1 px-4 py-2 bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 text-white rounded-xl shadow-lg hover:shadow-xl transition-all transform hover:scale-105 font-semibold">
-              View on Map
-            </button>
+            <a
+              href={`https://www.google.com/maps/dir/?api=1&origin=${encodeURIComponent(form.lat + ',' + form.lng)}&destination=${encodeURIComponent(assignment.lat + ',' + assignment.lng)}&travelmode=driving`}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="flex-1 px-4 py-2 bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 text-white rounded-xl shadow-lg hover:shadow-xl transition-all transform hover:scale-105 font-semibold text-center"
+            >
+              Open in Google Maps
+            </a>
           </div>
         </div>
       </div>
@@ -357,6 +495,29 @@ export default function IntakePage() {
                 placeholder="80.2707"
               />
             </div>
+          </div>
+          <div className="mt-3 flex items-center gap-3">
+            <button
+              type="button"
+              onClick={useCurrentLocation}
+              disabled={locating || loading}
+              className="inline-flex items-center px-3 py-2 text-sm rounded-lg border border-slate-300 hover:bg-slate-50 disabled:opacity-60"
+            >
+              {locating ? (
+                <>
+                  <Loader className="h-4 w-4 animate-spin mr-2" />
+                  Locating...
+                </>
+              ) : (
+                <>
+                  <MapPin className="h-4 w-4 mr-2" />
+                  Use current location
+                </>
+              )}
+            </button>
+            {geoError && (
+              <span className="text-xs text-red-600">{geoError}</span>
+            )}
           </div>
           
           <p className="text-xs text-slate-500 mt-2">

@@ -8,10 +8,18 @@ export default function SheltersPage() {
   const [showAddForm, setShowAddForm] = useState(false);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [isAdmin, setIsAdmin] = useState(localStorage.getItem('sc_is_admin') === 'true');
 
-  // Load shelters on component mount
+  // Load shelters on mount and sync admin state with navbar/dashboard
   useEffect(() => {
     loadShelters();
+    const onStorage = (e: StorageEvent) => {
+      if (e.key === 'sc_is_admin') {
+        setIsAdmin(localStorage.getItem('sc_is_admin') === 'true');
+      }
+    };
+    window.addEventListener('storage', onStorage);
+    return () => window.removeEventListener('storage', onStorage);
   }, []);
 
   const loadShelters = async () => {
@@ -675,17 +683,21 @@ export default function SheltersPage() {
             <p className="text-xl text-slate-600">Live overview of shelter status and locations across the region</p>
           </div>
         
-        <button
-          onClick={() => setShowAddForm(true)}
-          className="mt-4 md:mt-0 flex items-center justify-center px-6 py-3 border border-transparent text-base font-semibold rounded-lg text-white bg-gradient-to-r from-indigo-600 to-purple-600 hover:from-indigo-700 hover:to-purple-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 shadow-lg hover:shadow-xl transition-all transform hover:scale-105"
-        >
-          <Plus size={20} className="mr-2" />
-          Add New Shelter
-        </button>
+        <div className="mt-4 md:mt-0 flex items-center gap-3">
+          {isAdmin && (
+            <button
+              onClick={() => setShowAddForm(true)}
+              className="flex items-center justify-center px-6 py-3 border border-transparent text-base font-semibold rounded-lg text-white bg-gradient-to-r from-indigo-600 to-purple-600 hover:from-indigo-700 hover:to-purple-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 shadow-lg hover:shadow-xl transition-all transform hover:scale-105"
+            >
+              <Plus size={20} className="mr-2" />
+              Add New Shelter
+            </button>
+          )}
+        </div>
       </div>
 
-      {/* Add Shelter Form Modal */}
-      {showAddForm && (
+      {/* Add Shelter Form Modal (admin only) */}
+      {isAdmin && showAddForm && (
         <div className="fixed inset-0 bg-black bg-opacity-50 overflow-y-auto h-full w-full z-50 flex items-center justify-center p-4">
           <div className="relative bg-white rounded-xl shadow-2xl w-full max-w-2xl max-h-[90vh] overflow-y-auto">
             <div className="sticky top-0 bg-white border-b border-gray-200 px-6 py-4 rounded-t-xl">
@@ -713,6 +725,8 @@ export default function SheltersPage() {
           </div>
         </div>
       )}
+
+      {/* No local login modal; admin state is shared via navbar login */}
 
       {/* Edit Shelter Form Modal */}
       {editingShelter && (
@@ -758,17 +772,19 @@ export default function SheltersPage() {
                       <MapPin size={14} className="mr-1.5" /> {shelter.address}
                     </p>
                   </div>
-                  <div className="flex items-center space-x-3">
-                    <button onClick={() => setEditingShelter(shelter)} className="text-slate-400 hover:text-indigo-600 transition-colors">
-                      <Edit3 size={18} />
-                    </button>
-                    <button 
-                      onClick={() => handleDeleteShelter(shelter.id)} 
-                      className="text-slate-400 hover:text-red-600 transition-colors"
-                    >
-                      <Trash2 size={18} />
-                    </button>
-                  </div>
+                  {isAdmin && (
+                    <div className="flex items-center space-x-3">
+                      <button onClick={() => setEditingShelter(shelter)} className="text-slate-400 hover:text-indigo-600 transition-colors">
+                        <Edit3 size={18} />
+                      </button>
+                      <button 
+                        onClick={() => handleDeleteShelter(shelter.id)} 
+                        className="text-slate-400 hover:text-red-600 transition-colors"
+                      >
+                        <Trash2 size={18} />
+                      </button>
+                    </div>
+                  )}
                 </div>
 
                 <div className="mt-4 flex items-center justify-between">
@@ -788,7 +804,7 @@ export default function SheltersPage() {
                   </div>
                 </div>
                 
-                <QuickOccupancyControls shelter={shelter} />
+                {isAdmin && <QuickOccupancyControls shelter={shelter} />}
                 
                 <div className="mt-4 border-t border-slate-200 pt-3">
                   <p className="text-sm font-medium text-slate-600 flex items-center">

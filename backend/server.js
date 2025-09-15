@@ -11,6 +11,8 @@ import shelterRoutes from './routes/shelters.js';
 import requestRoutes from './routes/requests.js';
 import agentRoutes from './routes/agents.js';
 import dashboardRoutes from './routes/dashboard.js';
+import { computeRebalanceSuggestions, executeRebalancingDirect } from './controllers/rebalanceController.js';
+import { sendEmail } from './utils/email.js';
 
 const app = express();
 
@@ -105,4 +107,28 @@ app.listen(config.port, () => {
     console.log(`🔧 Mock data: ${config.enableMockData ? 'enabled' : 'disabled'}`);
     console.log(`🔧 API logging: ${config.enableApiLogging ? 'enabled' : 'disabled'}`);
   }
+  // Auto-rebalancing scheduler
+  const intervalMs = parseInt(process.env.REBALANCE_POLL_INTERVAL_MS || '60000');
+  const threshold = parseFloat(process.env.REBALANCE_THRESHOLD || '0.8');
+  setInterval(async () => {
+    try {
+      const { rebalancingSuggestions, alerts, overCapacityShelters } = await computeRebalanceSuggestions(threshold);
+      if (overCapacityShelters.length === 0 || rebalancingSuggestions.length === 0) return;
+
+      // Execute suggestions automatically
+      const results = await executeRebalancingDirect(rebalancingSuggestions);
+
+      // Email summary
+      try {
+        const adminEmail = process.env.ADMIN_EMAIL || 'joeben2211@gmail.com';
+        const subject = `Auto-Rebalance Executed: ${results.filter(r => r.success).length}/${results.length} actions`;
+        const body = `Alerts:\n${alerts.map(a => `- ${a.shelter_name} at ${a.occupancy_rate}% (${a.severity})`).join('\n')}\n\nResults:\n${results.map(r => r.success ? `Moved ${r.families_moved} from ${r.from_shelter} to ${r.to_shelter}` : `Failed: ${r.error}`).join('\n')}`;
+        await sendEmail({ to: adminEmail, subject, text: body });
+      } catch (e) {
+        console.warn('Failed to send auto-rebalance email:', e.message);
+      }
+    } catch (e) {
+      console.warn('Auto-rebalance scheduler error:', e.message);
+    }
+  }, intervalMs);
 });

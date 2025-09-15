@@ -2,6 +2,7 @@
 
 import Request from '../models/Request.js';
 import AgentLog from '../models/AgentLog.js';
+import Shelter from '../models/Shelter.js';
 import { generateEmbedding } from '../utils/embeddings.js';
 
 // Process new family request
@@ -204,6 +205,46 @@ export const updateRequestStatus = async (req, res) => {
   }
 };
 
+// Accept arrival: mark request completed and increment shelter occupancy
+export const acceptArrival = async (req, res) => {
+  try {
+    const { id } = req.params;
+    const request = await Request.findById(id);
+    if (!request) {
+      return res.status(404).json({ error: 'Request not found' });
+    }
+    if (!request.assigned_shelter_id) {
+      return res.status(400).json({ error: 'Request has no assigned shelter' });
+    }
+
+    // Update request status to completed
+    await Request.update(id, { status: 'completed' });
+
+    // Increment occupancy by people_count
+    const shelter = await Shelter.findById(request.assigned_shelter_id);
+    if (!shelter) {
+      return res.status(404).json({ error: 'Assigned shelter not found' });
+    }
+    const newOccupancy = Math.max(0, Math.min(shelter.capacity, (shelter.occupancy || 0) + (request.people_count || 0)));
+    await Shelter.updateOccupancy(shelter.id, newOccupancy);
+
+    // Log
+    await AgentLog.create({
+      agent_name: 'intake_agent',
+      action: `Arrival accepted for request ${id} at ${shelter.name} (+${request.people_count})`,
+      status: 'completed',
+      request_id: parseInt(id),
+      shelter_id: shelter.id,
+      details: { people_count: request.people_count, new_occupancy: newOccupancy }
+    });
+
+    res.json({ success: true, message: 'Arrival accepted and occupancy updated', new_occupancy: newOccupancy });
+  } catch (error) {
+    console.error('Error accepting arrival:', error);
+    res.status(500).json({ error: 'Failed to accept arrival', details: error.message });
+  }
+};
+
 // Get request statistics
 export const getRequestStats = async (req, res) => {
   try {
@@ -220,5 +261,28 @@ export const getRequestStats = async (req, res) => {
       error: 'Failed to fetch request statistics',
       details: error.message 
     });
+  }
+};
+
+// Delete a request
+export const deleteRequest = async (req, res) => {
+  try {
+    const { id } = req.params;
+    const deleted = await Request.delete(id);
+    if (!deleted) {
+      return res.status(404).json({ error: 'Request not found' });
+    }
+
+    await AgentLog.create({
+      agent_name: 'intake_agent',
+      action: `Request ${id} deleted by admin`,
+      status: 'completed',
+      request_id: parseInt(id)
+    });
+
+    res.json({ success: true, message: 'Request deleted' });
+  } catch (error) {
+    console.error('Error deleting request:', error);
+    res.status(500).json({ error: 'Failed to delete request', details: error.message });
   }
 };

@@ -4,6 +4,80 @@ import Request from '../models/Request.js';
 import Shelter from '../models/Shelter.js';
 import AgentLog from '../models/AgentLog.js';
 import { calculateDistance } from '../utils/geocode.js';
+import config from '../config/env.js';
+import { sendEmail } from '../utils/email.js';
+
+// Internal helper to compute rebalancing suggestions
+export const computeRebalanceSuggestions = async (threshold = 0.8) => {
+  const shelters = await Shelter.findAll();
+
+  const overCapacityShelters = shelters.filter(shelter => 
+    (shelter.occupancy / shelter.capacity) > parseFloat(threshold)
+  );
+
+  const underUtilizedShelters = shelters.filter(shelter => 
+    (shelter.occupancy / shelter.capacity) < 0.5
+  );
+
+  const rebalancingSuggestions = [];
+
+  for (const overloadedShelter of overCapacityShelters) {
+    const excessOccupancy = overloadedShelter.occupancy - Math.floor(overloadedShelter.capacity * 0.75);
+    if (excessOccupancy > 0) {
+      const targetShelters = underUtilizedShelters
+        .filter(shelter => shelter.id !== overloadedShelter.id)
+        .map(shelter => ({
+          ...shelter,
+          distance: calculateDistance(
+            overloadedShelter.lat, overloadedShelter.lng,
+            shelter.lat, shelter.lng
+          ),
+          available_capacity: shelter.capacity - shelter.occupancy
+        }))
+        .filter(shelter => shelter.available_capacity >= Math.min(5, excessOccupancy))
+        .sort((a, b) => a.distance - b.distance);
+
+      if (targetShelters.length > 0) {
+        const targetShelter = targetShelters[0];
+        const suggestedMoves = Math.min(5, excessOccupancy, targetShelter.available_capacity);
+
+        rebalancingSuggestions.push({
+          id: `${overloadedShelter.id}->${targetShelter.id}`,
+          from_shelter_id: overloadedShelter.id,
+          to_shelter_id: targetShelter.id,
+          move_count: suggestedMoves,
+          from_shelter: {
+            id: overloadedShelter.id,
+            name: overloadedShelter.name,
+            current_occupancy: overloadedShelter.occupancy,
+            capacity: overloadedShelter.capacity,
+            occupancy_rate: (overloadedShelter.occupancy / overloadedShelter.capacity * 100).toFixed(1)
+          },
+          to_shelter: {
+            id: targetShelter.id,
+            name: targetShelter.name,
+            current_occupancy: targetShelter.occupancy,
+            capacity: targetShelter.capacity,
+            available_capacity: targetShelter.available_capacity
+          },
+          suggested_moves: suggestedMoves,
+          distance: targetShelter.distance,
+          reason: `${overloadedShelter.name} at ${(overloadedShelter.occupancy / overloadedShelter.capacity * 100).toFixed(1)}% capacity`,
+          priority: excessOccupancy > 10 ? 'high' : 'medium'
+        });
+      }
+    }
+  }
+
+  const alerts = overCapacityShelters.map(shelter => ({
+    shelter_id: shelter.id,
+    shelter_name: shelter.name,
+    occupancy_rate: (shelter.occupancy / shelter.capacity * 100).toFixed(1),
+    severity: (shelter.occupancy / shelter.capacity) > 0.9 ? 'critical' : 'warning'
+  }));
+
+  return { shelters, overCapacityShelters, underUtilizedShelters, rebalancingSuggestions, alerts };
+};
 
 // Monitor shelter occupancy and trigger rebalancing
 export const monitorOccupancy = async (req, res) => {
@@ -17,67 +91,7 @@ export const monitorOccupancy = async (req, res) => {
       status: 'processing'
     });
 
-    // Get all shelters
-    const shelters = await Shelter.findAll();
-    
-    // Find over-capacity shelters
-    const overCapacityShelters = shelters.filter(shelter => 
-      (shelter.occupancy / shelter.capacity) > parseFloat(threshold)
-    );
-
-    // Find under-utilized shelters
-    const underUtilizedShelters = shelters.filter(shelter => 
-      (shelter.occupancy / shelter.capacity) < 0.5
-    );
-
-    // Generate rebalancing suggestions
-    const rebalancingSuggestions = [];
-
-    for (const overloadedShelter of overCapacityShelters) {
-      const excessOccupancy = overloadedShelter.occupancy - Math.floor(overloadedShelter.capacity * 0.75);
-      
-      if (excessOccupancy > 0) {
-        // Find best target shelters
-        const targetShelters = underUtilizedShelters
-          .filter(shelter => shelter.id !== overloadedShelter.id)
-          .map(shelter => ({
-            ...shelter,
-            distance: calculateDistance(
-              overloadedShelter.lat, overloadedShelter.lng,
-              shelter.lat, shelter.lng
-            ),
-            available_capacity: shelter.capacity - shelter.occupancy
-          }))
-          .filter(shelter => shelter.available_capacity >= Math.min(5, excessOccupancy))
-          .sort((a, b) => a.distance - b.distance);
-
-        if (targetShelters.length > 0) {
-          const targetShelter = targetShelters[0];
-          const suggestedMoves = Math.min(5, excessOccupancy, targetShelter.available_capacity);
-
-          rebalancingSuggestions.push({
-            from_shelter: {
-              id: overloadedShelter.id,
-              name: overloadedShelter.name,
-              current_occupancy: overloadedShelter.occupancy,
-              capacity: overloadedShelter.capacity,
-              occupancy_rate: (overloadedShelter.occupancy / overloadedShelter.capacity * 100).toFixed(1)
-            },
-            to_shelter: {
-              id: targetShelter.id,
-              name: targetShelter.name,
-              current_occupancy: targetShelter.occupancy,
-              capacity: targetShelter.capacity,
-              available_capacity: targetShelter.available_capacity
-            },
-            suggested_moves: suggestedMoves,
-            distance: targetShelter.distance,
-            reason: `${overloadedShelter.name} at ${(overloadedShelter.occupancy / overloadedShelter.capacity * 100).toFixed(1)}% capacity`,
-            priority: excessOccupancy > 10 ? 'high' : 'medium'
-          });
-        }
-      }
-    }
+    const { shelters, overCapacityShelters, underUtilizedShelters, rebalancingSuggestions, alerts } = await computeRebalanceSuggestions(parseFloat(threshold));
 
     // Log monitoring results
     await AgentLog.updateStatus(logEntry.id, 'completed', {
@@ -102,6 +116,17 @@ export const monitorOccupancy = async (req, res) => {
           suggestions_count: rebalancingSuggestions.length
         }
       });
+
+      // Send email notification to admin
+      try {
+        const adminEmail = process.env.ADMIN_EMAIL || config.frontendUrl ? (process.env.ADMIN_EMAIL || 'joeben2211@gmail.com') : 'joeben2211@gmail.com';
+        const subject = `ShelterConnect: ${overCapacityShelters.length} shelter(s) over capacity`;
+        const lines = rebalancingSuggestions.map(s => `Move ${s.move_count} from ${s.from_shelter.name} (${s.from_shelter.occupancy_rate}%) to ${s.to_shelter.name} (avail ${s.to_shelter.available_capacity}) - ${Math.round(s.distance/100)/10} km`);
+        const body = `Alerts:\n${alerts.map(a => `- ${a.shelter_name} at ${a.occupancy_rate}% (${a.severity})`).join('\n')}\n\nSuggestions:\n${lines.join('\n')}`;
+        await sendEmail({ to: adminEmail, subject, text: body });
+      } catch (e) {
+        console.warn('Failed to send capacity alert email:', e.message);
+      }
     } else {
       await AgentLog.create({
         agent_name: 'rebalance_agent',
@@ -123,12 +148,7 @@ export const monitorOccupancy = async (req, res) => {
         threshold: parseFloat(threshold)
       },
       rebalancing_suggestions: rebalancingSuggestions,
-      alerts: overCapacityShelters.map(shelter => ({
-        shelter_id: shelter.id,
-        shelter_name: shelter.name,
-        occupancy_rate: (shelter.occupancy / shelter.capacity * 100).toFixed(1),
-        severity: (shelter.occupancy / shelter.capacity) > 0.9 ? 'critical' : 'warning'
-      }))
+      alerts
     });
 
   } catch (error) {
@@ -259,6 +279,67 @@ export const executeRebalancing = async (req, res) => {
       details: error.message 
     });
   }
+};
+
+// Internal function to apply suggestions directly (used by scheduler)
+export const executeRebalancingDirect = async (suggestions) => {
+  const results = [];
+  for (const suggestion of suggestions) {
+    try {
+      const { from_shelter_id, to_shelter_id, move_count } = suggestion;
+      const fromShelter = await Shelter.findById(from_shelter_id);
+      const toShelter = await Shelter.findById(to_shelter_id);
+      if (!fromShelter || !toShelter) {
+        results.push({ suggestion_id: suggestion.id || 'unknown', success: false, error: 'Source or target shelter not found' });
+        continue;
+      }
+      if (fromShelter.occupancy < move_count) {
+        results.push({ suggestion_id: suggestion.id || 'unknown', success: false, error: 'Insufficient occupancy in source shelter' });
+        continue;
+      }
+      if ((toShelter.capacity - toShelter.occupancy) < move_count) {
+        results.push({ suggestion_id: suggestion.id || 'unknown', success: false, error: 'Insufficient capacity in target shelter' });
+        continue;
+      }
+
+      const requestsToMove = await Request.findByShelter(from_shelter_id);
+      const selectedRequests = requestsToMove.slice(0, move_count);
+
+      await Shelter.updateOccupancy(from_shelter_id, fromShelter.occupancy - move_count);
+      await Shelter.updateOccupancy(to_shelter_id, toShelter.occupancy + move_count);
+
+      for (const request of selectedRequests) {
+        await Request.assignToShelter(request.id, to_shelter_id);
+      }
+
+      await AgentLog.create({
+        agent_name: 'rebalance_agent',
+        action: `Auto-rebalanced ${move_count} families from ${fromShelter.name} to ${toShelter.name}`,
+        status: 'completed',
+        shelter_id: from_shelter_id,
+        details: {
+          from_shelter: fromShelter.name,
+          to_shelter: toShelter.name,
+          families_moved: move_count,
+          request_ids: selectedRequests.map(r => r.id),
+          automatic: true
+        }
+      });
+
+      results.push({
+        suggestion_id: suggestion.id || 'unknown',
+        success: true,
+        from_shelter: fromShelter.name,
+        to_shelter: toShelter.name,
+        families_moved: move_count,
+        new_from_occupancy: fromShelter.occupancy - move_count,
+        new_to_occupancy: toShelter.occupancy + move_count
+      });
+    } catch (error) {
+      results.push({ suggestion_id: suggestion.id || 'unknown', success: false, error: error.message });
+    }
+  }
+  return results;
 };
 
 // Get rebalancing history

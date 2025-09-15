@@ -7,7 +7,9 @@ import {
   getRequestById, 
   getPendingRequests, 
   updateRequestStatus, 
-  getRequestStats 
+  getRequestStats,
+  acceptArrival,
+  deleteRequest
 } from '../controllers/intakeController.js';
 
 import { findBestMatch as findMatch } from '../controllers/matchingController.js';
@@ -29,6 +31,9 @@ router.get('/status/pending', getPendingRequests);
 
 // Update request status
 router.patch('/:id/status', updateRequestStatus);
+
+// Accept arrival and update occupancy
+router.post('/:id/arrival', acceptArrival);
 
 // Get request statistics
 router.get('/stats/overview', getRequestStats);
@@ -140,5 +145,33 @@ router.post('/route', async (req, res) => {
     res.status(500).json({ error: 'Failed to calculate route', details: error.message });
   }
 });
+
+// Resolve request with shelter assignment
+router.post('/:id/resolve', async (req, res) => {
+  try {
+    const { id } = req.params;
+    const { shelterId } = req.body;
+    
+    if (!shelterId) {
+      return res.status(400).json({ error: 'Shelter ID is required' });
+    }
+    
+    const Request = (await import('../models/Request.js')).default;
+    const result = await Request.resolveRequest(parseInt(id), parseInt(shelterId));
+    
+    res.json({ 
+      success: true, 
+      message: 'Request resolved successfully',
+      newOccupancy: result.newOccupancy
+    });
+    
+  } catch (error) {
+    console.error('Resolve request error:', error);
+    res.status(500).json({ error: 'Failed to resolve request', details: error.message });
+  }
+});
+
+// Delete request
+router.delete('/:id', deleteRequest);
 
 export default router;

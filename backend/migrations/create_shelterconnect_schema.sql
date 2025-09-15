@@ -107,12 +107,12 @@ CREATE TABLE IF NOT EXISTS rebalance_suggestions (
 
 -- Insert sample shelters data
 INSERT INTO shelters (name, capacity, occupancy, features, address, lat, lng, phone) VALUES
-('Central Relief Center', 150, 78, 'medical,wheelchair,child-friendly', '123 Main Street, Downtown', 13.0827, 80.2707, '(555) 123-4567'),
-('Community Sports Complex', 200, 145, 'pet-friendly,large-families,recreational', '456 Sports Ave, North District', 13.0950, 80.2600, '(555) 234-5678'),
-('St. Mary\'s Community Hall', 100, 42, 'elderly-care,medical,quiet', '789 Church Road, West Side', 13.0700, 80.2800, '(555) 345-6789'),
-('Tech Campus Emergency Center', 300, 89, 'wifi,charging-stations,tech-support,wheelchair', '101 Innovation Drive, Tech Park', 13.1000, 80.2500, '(555) 456-7890'),
-('Riverside Community Center', 80, 71, 'waterfront,medical,child-friendly', '202 River Road, East Side', 13.0650, 80.2900, '(555) 567-8901'),
-('Metro School Gymnasium', 120, 34, 'large-space,sports-facilities,child-friendly', '303 Education Blvd, Central', 13.0850, 80.2650, '(555) 678-9012');
+('Rajiv Gandhi Memorial Relief Center', 150, 78, 'medical,wheelchair,child-friendly', 'Anna Salai, Mount Road, Chennai', 13.0627, 80.2707, '+91 94444 12345'),
+('Dr. APJ Abdul Kalam Community Center', 200, 145, 'pet-friendly,large-families,recreational', 'OMR, Sholinganallur, Chennai', 12.9010, 80.2279, '+91 98765 43210'),
+('St. Thomas Cathedral Community Hall', 100, 42, 'elderly-care,medical,quiet', 'Cathedral Road, Gopalapuram, Chennai', 13.0569, 80.2486, '+91 91234 56789'),
+('IIT Madras Emergency Shelter', 300, 89, 'wifi,charging-stations,tech-support,wheelchair', 'IIT Campus, Adyar, Chennai', 12.9916, 80.2336, '+91 87654 32109'),
+('Marina Beach Community Center', 80, 71, 'waterfront,medical,child-friendly', 'Marina Beach Road, Triplicane, Chennai', 13.0524, 80.2824, '+91 76543 21098'),
+('Nehru Stadium Sports Complex', 120, 34, 'large-space,sports-facilities,child-friendly', 'Park Town, Chennai', 13.0878, 80.2785, '+91 65432 10987');
 
 -- Insert sample agent logs
 INSERT INTO agent_logs (agent_name, action, status, request_id, shelter_id) VALUES

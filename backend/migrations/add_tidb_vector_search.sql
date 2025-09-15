@@ -86,16 +86,16 @@ CREATE TABLE IF NOT EXISTS vector_search_analytics (
 
 -- Sample shelter features for embedding generation:
 INSERT INTO shelters (name, capacity, occupancy, features, address, lat, lng, phone) VALUES
-('AI Medical Center Shelter', 200, 45, 'medical,wheelchair,mental-health,pediatric,pharmacy', 'Advanced Medical District', 13.08270000, 80.27070000, '(555) 200-0001'),
-('Tech Hub Emergency Shelter', 150, 30, 'power,wifi,laptop-charging,tech-support,wheelchair', 'Technology Park Area', 13.06270000, 80.29070000, '(555) 200-0002'),
-('Family Care Shelter', 180, 67, 'child-friendly,elderly-care,pet-friendly,playground,childcare', 'Community Family Center', 13.10670000, 80.25070000, '(555) 200-0003')
+('Apollo Hospital Emergency Shelter', 200, 45, 'medical,wheelchair,mental-health,pediatric,pharmacy', 'Greams Lane, Thousand Lights, Chennai', 13.06100000, 80.25900000, '+91 95555 12345'),
+('TIDEL Park Tech Shelter', 150, 30, 'power,wifi,laptop-charging,tech-support,wheelchair', 'TIDEL Park, Taramani, Chennai', 12.99500000, 80.24500000, '+91 93333 67890'),
+('Kalakshetra Family Care Center', 180, 67, 'child-friendly,elderly-care,pet-friendly,playground,childcare', 'Thiruvanmiyur, Chennai', 12.98200000, 80.25800000, '+91 91111 23456')
 ON DUPLICATE KEY UPDATE capacity=VALUES(capacity);
 
 -- Sample complex requests for vector matching:
 INSERT INTO requests (name, people_count, needs, features_required, lat, lng, phone, urgency, status) VALUES
-('Tech Family Emergency', 4, 'Family of software engineers with laptops and medical equipment needs. Elderly grandmother requires wheelchair access and medication storage. Need power for medical devices.', 'medical,wheelchair,power,elderly-care', 13.08500000, 80.27200000, '(555) 300-0001', 'high', 'pending'),
-('Medical Emergency Family', 6, 'Family with diabetic child requiring refrigerated medication and clean medical environment. Pet dog needs accommodation. Mother is pregnant.', 'medical,pediatric,pet-friendly,pharmacy,prenatal', 13.06500000, 80.29200000, '(555) 300-0002', 'high', 'pending'),
-('Large Extended Family', 12, 'Multi-generational family including 3 elderly members with mobility issues, 4 children ages 2-10, and service animal. Need childcare and elder care facilities.', 'wheelchair,elderly-care,child-friendly,childcare,pet-friendly', 13.10500000, 80.25200000, '(555) 300-0003', 'medium', 'pending')
+('Ravi Kumar Family', 4, 'Family of software engineers with laptops and medical equipment needs. Elderly grandmother requires wheelchair access and medication storage. Need power for medical devices.', 'medical,wheelchair,power,elderly-care', 13.08500000, 80.27200000, '+91 98888 11111', 'high', 'pending'),
+('Priya Sharma Family', 6, 'Family with diabetic child requiring refrigerated medication and clean medical environment. Pet dog needs accommodation. Mother is pregnant.', 'medical,pediatric,pet-friendly,pharmacy,prenatal', 13.06500000, 80.29200000, '+91 97777 22222', 'high', 'pending'),
+('Venkatesh Extended Family', 12, 'Multi-generational family including 3 elderly members with mobility issues, 4 children ages 2-10, and service animal. Need childcare and elder care facilities.', 'wheelchair,elderly-care,child-friendly,childcare,pet-friendly', 13.10500000, 80.25200000, '+91 96666 33333', 'medium', 'pending')
 ON DUPLICATE KEY UPDATE people_count=VALUES(people_count);
 
 -- Create stored procedures for vector search operations

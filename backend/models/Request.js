@@ -206,6 +206,88 @@ class Request {
     }
   }
 
+  // Resolve request with shelter assignment and update occupancy
+  static async resolveRequest(requestId, shelterId) {
+    const connection = await pool.getConnection();
+    
+    try {
+      await connection.beginTransaction();
+      
+      // Get current request data including existing assignment
+      const [currentRequestData] = await connection.execute(
+        'SELECT people_count, assigned_shelter_id, status FROM requests WHERE id = ?',
+        [requestId]
+      );
+      
+      if (currentRequestData.length === 0) {
+        throw new Error('Request not found');
+      }
+      
+      const { people_count: peopleCount, assigned_shelter_id: oldShelterId, status } = currentRequestData[0];
+      
+      // If request was already assigned to a different shelter, decrease old shelter occupancy
+      if (oldShelterId && oldShelterId !== shelterId && (status === 'assigned' || status === 'resolved')) {
+        await connection.execute(
+          'UPDATE shelters SET occupancy = GREATEST(0, occupancy - ?) WHERE id = ?',
+          [peopleCount, oldShelterId]
+        );
+      }
+      
+      // Update request status to resolved with new shelter assignment
+      const [requestResult] = await connection.execute(
+        'UPDATE requests SET assigned_shelter_id = ?, status = "resolved", resolved_at = NOW() WHERE id = ?',
+        [shelterId, requestId]
+      );
+      
+      if (requestResult.affectedRows === 0) {
+        throw new Error('Request not found or could not be updated');
+      }
+      
+      // Update new shelter occupancy
+      const [shelterResult] = await connection.execute(
+        'UPDATE shelters SET occupancy = occupancy + ? WHERE id = ?',
+        [peopleCount, shelterId]
+      );
+      
+      if (shelterResult.affectedRows === 0) {
+        throw new Error('Shelter not found');
+      }
+      
+      await connection.commit();
+      
+      // Return the new occupancy and old shelter info
+      const [newShelterData] = await connection.execute(
+        'SELECT occupancy, name FROM shelters WHERE id = ?',
+        [shelterId]
+      );
+      
+      let oldShelterData = null;
+      if (oldShelterId && oldShelterId !== shelterId) {
+        const [oldData] = await connection.execute(
+          'SELECT occupancy, name FROM shelters WHERE id = ?',
+          [oldShelterId]
+        );
+        oldShelterData = oldData[0] || null;
+      }
+      
+      return {
+        success: true,
+        newOccupancy: newShelterData[0].occupancy,
+        newShelterName: newShelterData[0].name,
+        oldShelterData: oldShelterData ? {
+          occupancy: oldShelterData.occupancy,
+          name: oldShelterData.name,
+          id: oldShelterId
+        } : null
+      };
+    } catch (error) {
+      await connection.rollback();
+      throw new Error(`Error resolving request: ${error.message}`);
+    } finally {
+      connection.release();
+    }
+  }
+
   // Delete request
   static async delete(id) {
     try {

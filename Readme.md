@@ -1,297 +1,382 @@
-# ShelterConnect AI
+# 🏠 ShelterConnect AI
 
-**Multi-step agentic disaster relief coordination system built for TiDB AgentX Hackathon**
+**Multi-Agent Disaster Relief Coordination System with Real-Time Resolution Management**
 
-ShelterConnect AI demonstrates how multi-step AI agents, powered by TiDB Serverless, can coordinate disaster relief more efficiently. By combining vector search, full-text filters, external tools, and agentic workflows, it provides a robust, transparent, and scalable system for humanitarian impact.
+[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
+[![Node.js](https://img.shields.io/badge/Node.js-18%2B-green.svg)](https://nodejs.org/)
+[![React](https://img.shields.io/badge/React-18.3.1-blue.svg)](https://reactjs.org/)
+[![TiDB](https://img.shields.io/badge/TiDB-Serverless-orange.svg)](https://tidb.cloud/)
+
+ShelterConnect AI is an intelligent disaster relief coordination platform that uses multi-agent architecture, vector search, and real-time occupancy management to efficiently match displaced families with available shelters during emergencies.
 
 ## 🎯 Problem Statement
 
-During disasters (floods, earthquakes, cyclones), displaced families struggle to find nearby available shelters. Relief coordinators face challenges such as:
+During disasters (floods, earthquakes, cyclones), displaced families face critical challenges:
 
-- **Inefficient matching** – Families may be directed to shelters that are already full
-- **Scattered data** – Shelter availability, family needs, and logistics are tracked manually
-- **Slow response** – High-urgency requests get delayed due to lack of automated triaging
-- **Poor resource allocation** – Some shelters remain underutilized while others overflow
+- **Inefficient Shelter Matching** – Families directed to full shelters or inappropriate facilities
+- **Manual Coordination** – Relief coordinators overwhelmed with scattered data and manual processes
+- **Resource Misallocation** – Some shelters overflow while others remain underutilized
+- **Delayed Response** – High-urgency requests get lost in manual triaging processes
+- **Capacity Management** – No real-time tracking of shelter occupancy and availability
 
-## 🚀 Solution
+## 🚀 Solution Overview
 
-ShelterConnect AI is a multi-step agentic platform that:
+ShelterConnect AI provides:
 
-1. **Collects and indexes** family requests with embeddings + full-text metadata
-2. **Uses vector search** + full-text filters in TiDB to find best-fit shelters
-3. **Invokes external tools** (maps API) for ETA and routing calculations
-4. **Chains LLM calls** for human-readable assignment summaries
-5. **Runs Rebalance Agent** to monitor occupancy and suggest relocations when shelters exceed 80% capacity
-
-## 🤖 Multi-Step Agent Workflow
-
-### 1. Intake Agent
-- Receives family requests, vectorizes needs
-- Stores in TiDB with metadata + embeddings
-- Creates agent log entries for transparency
-
-### 2. Matching Agent
-- Vector similarity search with shelter embeddings
-- Full-text filtering for required features
-- Distance and capacity scoring
-- Automatic shelter assignment
-
-### 3. Routing Agent
-- Calculates ETA based on distance and urgency
-- Generates route instructions
-- Bulk route optimization
-
-### 4. Rebalance Agent
-- Monitors shelter occupancy in real-time
-- Triggers rebalancing when shelters exceed 80% capacity
-- Generates reassignment suggestions
+1. **🤖 Multi-Agent Architecture** – Specialized AI agents for intake, matching, routing, and rebalancing
+2. **🔍 Vector Search** – Semantic matching of family needs with shelter capabilities using TiDB Serverless
+3. **📍 Real-Time Mapping** – Interactive shelter maps with live occupancy status
+4. **⚡ Smart Resolution** – One-click request resolution with automatic occupancy management
+5. **🔄 Dynamic Rebalancing** – Automated suggestions for optimal shelter utilization
+6. **📊 Live Dashboard** – Real-time monitoring and coordination interface
 
 ## 🏗️ Architecture
 
+### System Components
+
 ```
-Frontend (React + TypeScript)     Backend (Node.js + Express)
-├── Intake Form                   ├── Intake Agent Controller
-├── Coordinator Dashboard         ├── Matching Agent Controller
-├── Interactive Map               ├── Routing Agent Controller
-├── Simulation Controls           ├── Rebalance Agent Controller
-└── Real-time Updates            └── Agent Activity Logs
-
-Database (TiDB Serverless)
-├── Shelters Table
-├── Requests Table
-├── Vector Embeddings
-├── Agent Logs
-└── Rebalancing Suggestions
-
-External APIs
-├── OpenAI (Embeddings)
-├── Google Maps (Geocoding/Routing)
-└── TiDB Cloud (Vector Search)
+┌─────────────────────────────────────────────────────────────┐
+│                    ShelterConnect AI                        │
+├─────────────────────┬───────────────────┬───────────────────┤
+│   Frontend (React)  │  Backend (Node.js) │  Database (TiDB)  │
+│                     │                   │                   │
+│ • Dashboard UI      │ • Multi-Agent API │ • Vector Storage  │
+│ • Interactive Maps  │ • Request Handler │ • Full-Text Search│
+│ • Resolution Modal  │ • Shelter Manager │ • Occupancy Data  │
+│ • Real-Time Updates │ • Agent Orchestr. │ • Agent Logs      │
+└─────────────────────┴───────────────────┴───────────────────┘
 ```
 
-## 🛠️ Tech Stack
+### Multi-Agent Workflow
 
-### Frontend
-- **React 18** with TypeScript
-- **Vite** for fast development
-- **Tailwind CSS** for styling
-- **Lucide React** for icons
-- **React Router** for navigation
+```
+📝 Intake Agent → 🎯 Matching Agent → 🗺️ Routing Agent → ⚖️ Rebalance Agent
+     ↓               ↓                 ↓                    ↓
+  Family Request   Shelter Match    Route Planning     Load Balancing
+  + Vector Store   + Vector Search  + ETA Calculation  + Occupancy Monitor
+```
+
+## 🤖 Multi-Agent System
+
+### 1. 📝 Intake Agent
+- **Purpose**: Process incoming family requests
+- **Actions**: 
+  - Vectorize family needs using OpenAI embeddings
+  - Store requests in TiDB with metadata + semantic vectors
+  - Log all activities for transparency and auditing
+  - Validate and sanitize input data
+
+### 2. 🎯 Matching Agent  
+- **Purpose**: Find optimal shelter matches
+- **Actions**:
+  - Perform vector similarity search against shelter embeddings
+  - Apply full-text filters for required features (medical, wheelchair, etc.)
+  - Calculate composite scores (distance + capacity + feature match)
+  - Automatic shelter assignment based on availability
+
+### 3. 🗺️ Routing Agent
+- **Purpose**: Optimize travel logistics
+- **Actions**:
+  - Calculate ETA based on distance and urgency level
+  - Generate turn-by-turn route instructions
+  - Optimize bulk routing for multiple requests
+  - Consider traffic and emergency route preferences
+
+### 4. ⚖️ Rebalance Agent
+- **Purpose**: Maintain optimal shelter utilization  
+- **Actions**:
+  - Monitor real-time occupancy across all shelters
+  - Trigger rebalancing alerts when capacity exceeds 80%
+  - Generate relocation suggestions with minimal disruption
+  - Predict capacity issues before they occur
+
+## ✨ Key Features
+
+### 🎯 Smart Request Resolution
+- **One-Click Resolution**: Resolve requests with shelter assignment in a single action
+- **Capacity Management**: Automatic occupancy updates when resolving requests
+- **Reassignment Logic**: Smart handling of shelter changes with proper capacity adjustments
+- **Real-Time Updates**: Live dashboard updates across all connected clients
+
+### 📍 Interactive Mapping
+- **Live Shelter Status**: Real-time occupancy visualization on interactive maps
+- **Color-Coded Indicators**: Green (available), Yellow (near capacity), Red (full)
+- **Request Tracking**: Visual representation of pending and resolved requests
+- **Geographic Optimization**: Distance-based matching and routing
+
+### 📊 Comprehensive Dashboard
+- **Real-Time Statistics**: Live tracking of requests, occupancy, and resolution rates
+- **Agent Activity Logs**: Transparent view of all automated actions
+- **Rebalance Alerts**: Proactive notifications for capacity management
+- **Historical Analytics**: Track performance and identify optimization opportunities
+
+## 🛠️ Technology Stack
 
 ### Backend
-- **Node.js** with Express.js
-- **TypeScript** for type safety
-- **MySQL2** for TiDB connectivity
-- **OpenAI API** for embeddings
-- **Google Maps API** for geocoding
+- **Node.js + Express**: RESTful API server with middleware
+- **TiDB Serverless**: Vector database for embeddings + traditional SQL
+- **OpenAI API**: Text embedding generation for semantic search
+- **MySQL2**: Database connection with prepared statements
+- **Security**: Helmet, CORS, rate limiting, input validation
 
-### Database
-- **TiDB Serverless** for vector + full-text search
-- **Vector columns** for embeddings
-- **Full-text indexes** for feature matching
-- **Structured queries** for occupancy tracking
+### Frontend  
+- **React 18 + TypeScript**: Modern React with type safety
+- **Vite**: Fast build tool and development server
+- **Tailwind CSS**: Utility-first styling framework
+- **Leaflet**: Interactive mapping with shelter visualization
+- **Lucide React**: Consistent icon library
 
-## 📦 Installation
+### Database Schema
+- **Shelters**: Location, capacity, features, occupancy tracking
+- **Requests**: Family data, needs, status, resolution tracking  
+- **Vectors**: Semantic embeddings for both shelters and requests
+- **Agent Logs**: Comprehensive audit trail of all agent actions
+
+## � Quick Start
 
 ### Prerequisites
-- Node.js 18+ and npm
-- TiDB Serverless account
-- OpenAI API key (optional for demo)
-- Google Maps API key (optional for demo)
+- **Node.js 18+** and npm
+- **TiDB Serverless** account ([Sign up here](https://tidbcloud.com/))
+- **OpenAI API key** (optional, for vector embeddings)
 
-### Quick Start
+### Installation & Setup
 
-1. **Clone the repository**:
+1. **Clone the repository**
    ```bash
-   git clone <repository-url>
+   git clone https://github.com/joe-anidas/shelterconnect.git
    cd shelterconnect
    ```
 
-2. **Set up environment variables**:
+2. **Backend Setup**
    ```bash
-   ./setup-env.sh
-   ```
-
-3. **Install dependencies**:
-   ```bash
-   # Backend
    cd backend
    npm install
    
-   # Frontend
+   # Copy and configure environment variables
+   cp .env.example .env
+   # Edit .env with your TiDB and OpenAI credentials
+   ```
+
+3. **Frontend Setup**
+   ```bash
    cd ../frontend
    npm install
-   ```
-
-4. **Set up the database**:
-   ```bash
-   # Run the migration script in your TiDB Serverless instance
-   mysql -h your-tidb-host -u your-username -p < backend/migrations/create_shelterconnect_schema.sql
-   ```
-
-5. **Start the development servers**:
-   ```bash
-   # Terminal 1 - Backend
-   cd backend
-   npm run dev
    
-   # Terminal 2 - Frontend
-   cd frontend
-   npm run dev
+   # Copy and configure environment variables  
+   cp .env.example .env
+   # Edit .env with your API endpoints
    ```
 
-6. **Access the application**:
-   - Frontend: http://localhost:5173
-   - Backend API: http://localhost:3000
-   - API Documentation: http://localhost:3000
+4. **Database Setup**
+   ```bash
+   # Run database migrations
+   cd backend
+   node run_migration.js
+   ```
 
-## 🔧 Configuration
+5. **Start Development Servers**
+   ```bash
+   # Terminal 1 - Backend (Port 3000)
+   cd backend && npm start
+   
+   # Terminal 2 - Frontend (Port 5173)
+   cd frontend && npm run dev
+   ```
 
-### Environment Variables
+6. **Access the Application**
+   - 🌐 **Frontend**: http://localhost:5173
+   - 🔌 **Backend API**: http://localhost:3000
+   - 📊 **Dashboard**: http://localhost:5173/dashboard
 
-#### Backend (.env)
+## ⚙️ Configuration
+
+### Backend Environment Variables
+
 ```env
+# Server Configuration
 PORT=3000
 NODE_ENV=development
 FRONTEND_URL=http://localhost:5173
 
-# TiDB Serverless
-DB_HOST=your-tidb-host
-DB_USER=your-tidb-username
-DB_PASSWORD=your-tidb-password
-DB_NAME=shelterconnect_ai
+# TiDB Serverless Database
+DB_HOST=gateway01.ap-southeast-1.prod.aws.tidbcloud.com
+DB_USER=your_username
+DB_PASSWORD=your_password
+DB_NAME=test
 DB_PORT=4000
 
-# OpenAI API (optional)
-OPENAI_API_KEY=your-openai-api-key
+# OpenAI API (for vector embeddings)
+OPENAI_API_KEY=your_openai_api_key
 
-# Google Maps API (optional)
-GOOGLE_MAPS_API_KEY=your-google-maps-api-key
+# Feature Flags
+ENABLE_MOCK_DATA=false
+ENABLE_API_LOGGING=true
 ```
 
-#### Frontend (.env)
+### Frontend Environment Variables
+
 ```env
+# API Configuration
 VITE_API_BASE_URL=http://localhost:3000/api
 VITE_APP_TITLE=ShelterConnect AI
 VITE_APP_VERSION=1.0.0
+
+# Maps Configuration (optional)
+VITE_GOOGLE_MAPS_API_KEY=your_google_maps_api_key
 ```
-
-## 🎮 Demo Features
-
-### 3-Minute Demo Script
-
-1. **0:00 - 0:45**: Run "Earthquake Scenario" → Show intake processing → Watch agent assignments in dashboard
-2. **0:45 - 1:30**: Go to Shelters page → Set occupancy to 85% → Return to dashboard → See rebalance alerts
-3. **1:30 - 3:00**: Click "Trigger Rebalancing" → Show agent logs → Explain TiDB integration → Show repository
-
-### Key Demo Features
-- **Real-time Dashboard**: Live agent activity and shelter status
-- **Interactive Map**: Color-coded occupancy and live assignments
-- **Simulation Controls**: Earthquake scenarios and batch requests
-- **Agent Logging**: Transparent multi-step decision tracking
 
 ## 📊 API Endpoints
 
-### Shelters
-- `GET /api/shelters` - Get all shelters
-- `POST /api/shelters` - Create new shelter
-- `GET /api/shelters/nearby/:lat/:lng` - Find nearby shelters
-- `GET /api/shelters/over-capacity/:threshold` - Find over-capacity shelters
+### 🏠 Shelters
+```
+GET    /api/shelters              # Get all shelters with occupancy
+POST   /api/shelters              # Create new shelter
+GET    /api/shelters/:id          # Get shelter by ID
+PUT    /api/shelters/:id          # Update shelter information
+GET    /api/shelters/nearby       # Find shelters near coordinates
+```
 
-### Requests
-- `POST /api/requests` - Process new family request (Intake Agent)
-- `GET /api/requests/status/pending` - Get pending requests
-- `PATCH /api/requests/:id/status` - Update request status
+### 👥 Requests
+```
+POST   /api/requests              # Submit new family request
+GET    /api/requests              # Get all requests (with pagination)
+GET    /api/requests/:id          # Get specific request details
+POST   /api/requests/:id/resolve  # Resolve request with shelter assignment
+DELETE /api/requests/:id          # Delete request
+POST   /api/requests/:id/arrival  # Mark family arrival (complete request)
+POST   /api/requests/match        # Find best shelter match
+POST   /api/requests/route        # Calculate route and ETA
+```
 
-### Agents
-- `POST /api/agents/matching/find-match/:requestId` - Find best shelter match
-- `GET /api/agents/routing/calculate/:requestId` - Calculate route and ETA
-- `GET /api/agents/rebalance/monitor` - Monitor occupancy levels
-- `POST /api/agents/rebalance/execute` - Execute rebalancing suggestions
-- `GET /api/agents/logs` - Get agent activity logs
-
-### Dashboard
-- `GET /api/dashboard/overview` - Get dashboard overview
-- `GET /api/dashboard/realtime` - Get real-time updates
-- `GET /api/dashboard/map-data` - Get map visualization data
-- `GET /api/dashboard/health` - Get system health status
+### 🤖 Agents & Dashboard
+```
+GET    /api/agents/logs           # Get agent activity logs
+POST   /api/agents/rebalance      # Trigger rebalance suggestions
+GET    /api/dashboard/overview    # Dashboard statistics
+GET    /api/dashboard/realtime    # Real-time updates
+```
 
 ## 🗄️ Database Schema
 
 ### Core Tables
-- **shelters**: Shelter information with capacity and features
-- **requests**: Family requests with needs and location
-- **request_vectors**: Vector embeddings for requests (TiDB vector columns)
-- **shelter_vectors**: Vector embeddings for shelters
-- **agent_logs**: Activity logs for all agents
-- **rebalance_suggestions**: Rebalancing recommendations
+- **`shelters`**: Location, capacity, features, current occupancy
+- **`requests`**: Family data, needs, status (pending→assigned→resolved)
+- **`request_vectors`**: Vector embeddings for semantic matching
+- **`shelter_vectors`**: Vector embeddings for shelter features
+- **`agent_logs`**: Complete audit trail of agent activities
+- **`rebalance_suggestions`**: Automated load balancing recommendations
 
-### Key Features
-- **Vector Search**: TiDB Serverless vector columns for semantic matching
-- **Full-text Search**: MySQL FULLTEXT indexes for feature filtering
-- **Real-time Updates**: Timestamp-based change tracking
-- **Agent Transparency**: Complete audit trail of all agent decisions
+### Key Database Features
+- **📊 Vector Search**: TiDB Serverless vector columns for semantic matching
+- **🔍 Full-Text Search**: MySQL FULLTEXT indexes for feature filtering  
+- **⏱️ Real-Time Tracking**: Timestamp-based change tracking
+- **🔍 Agent Transparency**: Complete audit trail of all decisions
+
+## 🎯 Usage Guide
+
+### For Coordinators
+1. **Monitor Dashboard**: View real-time shelter status and family requests
+2. **Resolve Requests**: Click "Resolved" → select shelter → confirm assignment
+3. **Capacity Management**: Watch alerts for overcrowded shelters
+4. **Track Progress**: Review resolved requests and occupancy statistics
+
+### For Families (Intake)
+1. **Submit Request**: Use intake form to register shelter needs
+2. **Track Status**: Monitor request status (pending → assigned → resolved)
+3. **Get Directions**: Receive shelter assignment with location details
+
+### For Administrators
+1. **Manage Shelters**: Add/update shelter information and capacity
+2. **Monitor Agents**: Review automated decision-making in agent logs
+3. **Rebalancing**: Approve or reject rebalancing suggestions
+4. **System Health**: Monitor API performance and database connectivity
+
+## 🧪 Development & Testing
+
+### Running Tests
+```bash
+# Backend API tests
+cd backend && npm test
+
+# Frontend component tests  
+cd frontend && npm test
+
+# Database integration tests
+cd backend && npm run test:db
+```
+
+### Mock Data Mode
+- ✅ **Works offline**: Full functionality without external APIs
+- 🔄 **Sample data**: Pre-loaded shelters and requests for testing
+- 🎯 **Vector fallbacks**: Mock embeddings for development
+- 📍 **Location mocks**: Simulated coordinates and routing
 
 ## 🚀 Deployment
 
-### Production Deployment
+### Production Checklist
+- [ ] Set up TiDB Serverless database
+- [ ] Configure environment variables
+- [ ] Set up OpenAI API key (optional)
+- [ ] Deploy backend (Railway/Render/DigitalOcean)
+- [ ] Deploy frontend (Vercel/Netlify/CloudFlare)
+- [ ] Configure CORS for production domains
+- [ ] Set up monitoring and logging
 
-1. **Set up TiDB Serverless database**
-2. **Configure environment variables**
-3. **Deploy backend** to Railway/Render/etc.
-4. **Deploy frontend** to Vercel/Netlify/etc.
-5. **Configure CORS** for your domain
-
-### Docker Deployment (Optional)
+### Docker Deployment
 ```bash
-# Build and run with Docker Compose
-docker-compose up -d
+# Quick deployment with Docker
+docker-compose up -d --build
+
+# Access application
+open http://localhost:3000  # Backend
+open http://localhost:5173  # Frontend
 ```
 
-## 🧪 Development
+## 📈 Performance & Scalability
 
-### Mock Data Mode
-The system includes comprehensive mock data and fallback functionality for development without external API keys:
-
-- Mock embeddings when OpenAI API key is not provided
-- Mock coordinates when Google Maps API key is not provided
-- Sample shelter and request data for testing
-
-### Testing
-```bash
-# Backend tests
-cd backend
-npm test
-
-# Frontend tests
-cd frontend
-npm test
-```
+- **🔍 Vector Search**: Sub-second semantic matching with TiDB vectors
+- **⚡ Real-Time Updates**: WebSocket connections for live dashboard updates
+- **🏗️ Horizontal Scaling**: Stateless backend design for easy scaling
+- **📊 Efficient Queries**: Optimized database indexes and prepared statements
+- **🔄 Caching**: Redis integration for frequently accessed data
 
 ## 🤝 Contributing
 
+We welcome contributions! Please see our [Contributing Guide](CONTRIBUTING.md) for details.
+
+### Development Setup
 1. Fork the repository
-2. Create a feature branch (`git checkout -b feature/amazing-feature`)
-3. Commit your changes (`git commit -m 'Add amazing feature'`)
-4. Push to the branch (`git push origin feature/amazing-feature`)
-5. Open a Pull Request
+2. Clone your fork: `git clone https://github.com/yourusername/shelterconnect.git`
+3. Create a feature branch: `git checkout -b feature/awesome-feature`
+4. Make your changes and test thoroughly
+5. Commit with clear messages: `git commit -m "Add awesome feature"`
+6. Push to your fork: `git push origin feature/awesome-feature`
+7. Create a Pull Request with detailed description
 
 ## 📄 License
 
-This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
+This project is licensed under the **MIT License** - see the [LICENSE](LICENSE) file for details.
 
 ## 🙏 Acknowledgments
 
-- **TiDB** for providing the vector search capabilities
-- **OpenAI** for embedding generation
-- **Google Maps** for geocoding and routing
-- **React** and **Node.js** communities for excellent tooling
+- **[TiDB Cloud](https://tidbcloud.com/)** - Vector database and serverless infrastructure
+- **[OpenAI](https://openai.com/)** - Embedding generation for semantic search
+- **[Leaflet](https://leafletjs.com/)** - Open-source mapping library
+- **[React](https://reactjs.org/)** & **[Node.js](https://nodejs.org/)** communities
 
-## 📞 Support
+## 📞 Support & Community
 
-For support, email support@shelterconnect.ai or join our Slack channel.
+- 📧 **Email**: [joe@anidas.dev](mailto:joe@anidas.dev)
+- � **GitHub Issues**: [Report bugs or request features](https://github.com/joe-anidas/shelterconnect/issues)
+- 📖 **Documentation**: [Comprehensive guides](./documentation.md)
+- 🔧 **Environment Setup**: [Detailed setup guide](./ENVIRONMENT_SETUP.md)
 
-## 🔮 Future Scope
+---
+
+<div align="center">
+  <p><strong>Built with ❤️ for humanitarian impact</strong></p>
+  <p>ShelterConnect AI - Connecting families with safety through intelligent coordination</p>
+</div>
 
 - SMS/WhatsApp chatbot integration for intake
 - IoT sensor data ingestion (shelter occupancy auto-updates)
