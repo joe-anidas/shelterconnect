@@ -1,5 +1,5 @@
-import React from 'react';
-import { AlertTriangle, Users, ArrowRight, CheckCircle } from 'lucide-react';
+import React, { useState, useEffect } from 'react';
+import { AlertTriangle, ArrowRight, CheckCircle, Clock, Activity } from 'lucide-react';
 
 interface Shelter {
   id: number;
@@ -13,8 +13,37 @@ interface RebalanceAlertsProps {
 }
 
 export default function RebalanceAlerts({ shelters }: RebalanceAlertsProps) {
+  const [lastRebalanceCheck, setLastRebalanceCheck] = useState<Date>(new Date());
+  const [nextRebalanceIn, setNextRebalanceIn] = useState<number>(15); // 15 seconds
+  const [isRebalancing, setIsRebalancing] = useState<boolean>(false);
+
+  // Countdown timer for next rebalance check
+  useEffect(() => {
+    const interval = setInterval(() => {
+      const now = new Date();
+      const timeSinceLastCheck = Math.floor((now.getTime() - lastRebalanceCheck.getTime()) / 1000);
+      const remaining = Math.max(0, 15 - timeSinceLastCheck);
+      setNextRebalanceIn(remaining);
+      
+      if (remaining === 0) {
+        setLastRebalanceCheck(new Date());
+        // Simulate rebalancing activity
+        if (overCapacityShelters.length > 0) {
+          setIsRebalancing(true);
+          setTimeout(() => setIsRebalancing(false), 2000);
+        }
+      }
+    }, 1000);
+
+    return () => clearInterval(interval);
+  }, [lastRebalanceCheck]);
+
+  // Update last check when shelters data changes (indicating new data fetch)
+  useEffect(() => {
+    setLastRebalanceCheck(new Date());
+  }, [shelters]);
   const overCapacityShelters = shelters.filter(shelter => 
-    (shelter.occupancy / shelter.capacity) > 0.8
+    (shelter.occupancy / shelter.capacity) > 0.75 // Updated for faster rebalancing
   );
 
   const availableShelters = shelters.filter(shelter => 
@@ -47,10 +76,16 @@ export default function RebalanceAlerts({ shelters }: RebalanceAlertsProps) {
     return (
       <div className="bg-white rounded-lg shadow-sm border border-slate-200">
         <div className="p-4 border-b border-slate-200">
-          <h2 className="text-lg font-semibold text-slate-900 flex items-center">
-            <CheckCircle className="h-5 w-5 mr-2 text-green-500" />
-            Rebalance Status
-          </h2>
+          <div className="flex items-center justify-between">
+            <h2 className="text-lg font-semibold text-slate-900 flex items-center">
+              <CheckCircle className="h-5 w-5 mr-2 text-green-500" />
+              Rebalance Status
+            </h2>
+            <div className="flex items-center text-slate-500 text-sm">
+              <Clock className="h-4 w-4 mr-1" />
+              <span>Next check: {nextRebalanceIn}s</span>
+            </div>
+          </div>
         </div>
         <div className="p-4 text-center">
           <div className="text-green-600 mb-2">
@@ -68,12 +103,26 @@ export default function RebalanceAlerts({ shelters }: RebalanceAlertsProps) {
   return (
     <div className="bg-white rounded-lg shadow-sm border border-slate-200">
       <div className="p-4 border-b border-slate-200">
-        <h2 className="text-lg font-semibold text-slate-900 flex items-center">
-          <AlertTriangle className="h-5 w-5 mr-2 text-red-500" />
-          Rebalance Alerts
-        </h2>
+        <div className="flex items-center justify-between">
+          <h2 className="text-lg font-semibold text-slate-900 flex items-center">
+            <AlertTriangle className="h-5 w-5 mr-2 text-red-500" />
+            Rebalance Alerts
+          </h2>
+          <div className="flex items-center space-x-2">
+            {isRebalancing && (
+              <div className="flex items-center text-blue-600 text-sm">
+                <Activity className="h-4 w-4 mr-1 animate-pulse" />
+                <span>Rebalancing...</span>
+              </div>
+            )}
+            <div className="flex items-center text-slate-500 text-sm">
+              <Clock className="h-4 w-4 mr-1" />
+              <span>Next check: {nextRebalanceIn}s</span>
+            </div>
+          </div>
+        </div>
         <p className="text-sm text-slate-600 mt-1">
-          {overCapacityShelters.length} shelter{overCapacityShelters.length !== 1 ? 's' : ''} over 80% capacity
+          {overCapacityShelters.length} shelter{overCapacityShelters.length !== 1 ? 's' : ''} over 75% capacity
         </p>
       </div>
 

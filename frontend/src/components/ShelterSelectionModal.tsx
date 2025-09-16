@@ -57,125 +57,172 @@ export default function ShelterSelectionModal({
   }
 
   return (
-    <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
-      <div className="bg-white rounded-lg shadow-xl max-w-2xl w-full max-h-[80vh] overflow-hidden">
+    <div className="fixed inset-0 bg-black bg-opacity-60 backdrop-blur-sm flex items-center justify-center z-[9999] p-4 animate-fadeIn">
+      <div className="bg-white rounded-2xl shadow-2xl max-w-3xl w-full max-h-[80vh] overflow-hidden transform transition-all duration-300 scale-100 flex flex-col">
         {/* Header */}
-        <div className="flex items-center justify-between p-6 border-b border-gray-200">
-          <div>
-            <h2 className="text-lg font-semibold text-gray-900">Resolve Request</h2>
-            <p className="text-sm text-gray-600">
-              Select shelter assignment for {requestName} ({peopleCount} people)
-            </p>
+        <div className="bg-gradient-to-r from-blue-600 to-indigo-600 text-white p-6">
+          <div className="flex items-center justify-between">
+            <div>
+              <h2 className="text-xl font-bold mb-1">🏠 Assign Shelter</h2>
+              <p className="text-blue-100">
+                Finding the perfect match for <span className="font-semibold">{requestName}</span> ({peopleCount} {peopleCount === 1 ? 'person' : 'people'})
+              </p>
+            </div>
+            <button
+              onClick={onClose}
+              className="text-white hover:text-blue-200 bg-white bg-opacity-20 rounded-full p-2 transition-all duration-200 hover:bg-opacity-30"
+            >
+              <X className="h-6 w-6" />
+            </button>
           </div>
-          <button
-            onClick={onClose}
-            className="text-gray-400 hover:text-gray-600"
-          >
-            <X className="h-6 w-6" />
-          </button>
         </div>
 
         {/* Content */}
-        <div className="p-6 overflow-y-auto max-h-[60vh]">
+        <div className="p-6 overflow-y-auto max-h-[50vh] bg-gray-50">
           {currentAssignedShelter && (
-            <div className="mb-6 p-4 bg-blue-50 border border-blue-200 rounded-lg">
-              <div className="flex items-center">
-                <MapPin className="h-5 w-5 text-blue-600 mr-2" />
-                <span className="text-blue-800 font-medium">
-                  Currently assigned to: {currentAssignedShelter}
-                </span>
+            <div className="mb-6 p-5 bg-gradient-to-r from-amber-50 to-orange-50 border-l-4 border-amber-400 rounded-xl shadow-sm">
+              <div className="flex items-center mb-2">
+                <div className="bg-amber-100 rounded-full p-2 mr-3">
+                  <MapPin className="h-5 w-5 text-amber-600" />
+                </div>
+                <div>
+                  <h3 className="text-amber-800 font-semibold">Current Assignment</h3>
+                  <p className="text-amber-700">{currentAssignedShelter}</p>
+                </div>
               </div>
-              <p className="text-sm text-blue-600 mt-1">
-                You can keep this assignment or change to a different shelter below.
+              <p className="text-sm text-amber-600 bg-amber-100 p-2 rounded-lg">
+                💡 You can keep this assignment or select a different shelter below
               </p>
             </div>
           )}
 
           {loading ? (
-            <div className="text-center py-8">
-              <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600 mx-auto"></div>
-              <p className="text-gray-600 mt-2">Loading shelters...</p>
+            <div className="text-center py-12">
+              <div className="relative">
+                <div className="animate-spin rounded-full h-12 w-12 border-4 border-blue-200 border-t-blue-600 mx-auto"></div>
+                <div className="absolute inset-0 flex items-center justify-center">
+                  <div className="h-3 w-3 bg-blue-600 rounded-full animate-pulse"></div>
+                </div>
+              </div>
+              <p className="text-gray-600 mt-4 font-medium">Finding available shelters...</p>
+              <p className="text-gray-500 text-sm mt-1">This won't take long</p>
             </div>
           ) : error ? (
-            <div className="text-center py-8">
-              <p className="text-red-600">{error}</p>
-              <button
-                onClick={loadShelters}
-                className="mt-2 text-blue-600 hover:text-blue-800"
-              >
-                Try again
-              </button>
+            <div className="text-center py-12">
+              <div className="bg-red-50 border border-red-200 rounded-xl p-6 max-w-sm mx-auto">
+                <div className="text-red-500 text-4xl mb-3">⚠️</div>
+                <p className="text-red-700 font-semibold mb-2">{error}</p>
+                <button
+                  onClick={loadShelters}
+                  className="bg-red-600 hover:bg-red-700 text-white px-4 py-2 rounded-lg transition-colors font-medium"
+                >
+                  Try Again
+                </button>
+              </div>
             </div>
           ) : (
-            <div className="space-y-3">
-              <h3 className="text-sm font-medium text-gray-700 mb-3">
-                Available Shelters:
-              </h3>
+            <div className="space-y-4">
+              <div className="flex items-center justify-between mb-4">
+                <h3 className="text-lg font-semibold text-gray-800 flex items-center">
+                  🏢 Available Shelters
+                  <span className="ml-2 bg-blue-100 text-blue-800 text-sm font-medium px-3 py-1 rounded-full">
+                    {shelters.filter(s => (s.capacity - s.occupancy) >= peopleCount).length} suitable
+                  </span>
+                </h3>
+              </div>
               {shelters.map((shelter) => {
                 const availableSpace = shelter.capacity - shelter.occupancy;
                 const hasCapacity = availableSpace >= peopleCount;
                 const isSelected = selectedShelterId === shelter.id;
+                const occupancyRatio = shelter.occupancy / shelter.capacity;
                 
                 return (
                   <div
                     key={shelter.id}
-                    className={`border rounded-lg p-4 cursor-pointer transition-colors ${
+                    className={`relative overflow-hidden rounded-xl transition-all duration-300 cursor-pointer group ${
                       isSelected
-                        ? 'border-blue-500 bg-blue-50'
+                        ? 'ring-2 ring-blue-500 bg-blue-50 shadow-lg scale-[1.02]'
                         : hasCapacity
-                        ? 'border-gray-200 hover:border-gray-300 hover:bg-gray-50'
-                        : 'border-red-200 bg-red-50 cursor-not-allowed'
+                        ? 'bg-white border border-gray-200 hover:border-blue-300 hover:shadow-md hover:scale-[1.01]'
+                        : 'bg-gray-50 border border-red-200 cursor-not-allowed opacity-75'
                     }`}
                     onClick={() => hasCapacity && setSelectedShelterId(shelter.id)}
                   >
-                    <div className="flex items-start justify-between">
-                      <div className="flex-1">
-                        <div className="flex items-center">
-                          <h4 className="font-medium text-gray-900">{shelter.name}</h4>
-                          {isSelected && (
-                            <Check className="h-5 w-5 text-blue-600 ml-2" />
-                          )}
-                        </div>
-                        
-                        <div className="flex items-center mt-2 text-sm text-gray-600">
-                          <Users className="h-4 w-4 mr-1" />
-                          <span>
-                            {shelter.occupancy}/{shelter.capacity} occupancy
-                          </span>
-                          <span className="mx-2">•</span>
-                          <span className={hasCapacity ? 'text-green-600' : 'text-red-600'}>
-                            {availableSpace} available space
-                          </span>
-                        </div>
-                        
-                        {shelter.features && (
-                          <div className="mt-2">
-                            <div className="flex flex-wrap gap-1">
-                              {shelter.features.split(',').map((feature, index) => (
-                                <span
-                                  key={index}
-                                  className="inline-block px-2 py-1 text-xs bg-gray-100 text-gray-700 rounded"
-                                >
-                                  {feature.trim()}
-                                </span>
-                              ))}
+                    {/* Selection indicator */}
+                    {isSelected && (
+                      <div className="absolute top-4 right-4 bg-blue-600 text-white rounded-full p-2 shadow-lg">
+                        <Check className="h-4 w-4" />
+                      </div>
+                    )}
+                    
+                    {/* Capacity indicator */}
+                    {!hasCapacity && (
+                      <div className="absolute top-4 right-4 bg-red-500 text-white px-3 py-1 rounded-full text-xs font-medium">
+                        Full
+                      </div>
+                    )}
+
+                    <div className="p-5">
+                      <div className="flex items-start justify-between mb-3">
+                        <div className="flex-1">
+                          <h4 className="text-lg font-semibold text-gray-900 mb-1">{shelter.name}</h4>
+                          
+                          {/* Capacity bar */}
+                          <div className="mb-3">
+                            <div className="flex items-center justify-between text-sm mb-1">
+                              <span className="text-gray-600">Occupancy</span>
+                              <span className={`font-semibold ${
+                                occupancyRatio >= 0.9 ? 'text-red-600' : 
+                                occupancyRatio >= 0.7 ? 'text-amber-600' : 'text-green-600'
+                              }`}>
+                                {shelter.occupancy}/{shelter.capacity}
+                              </span>
+                            </div>
+                            <div className="w-full bg-gray-200 rounded-full h-2">
+                              <div
+                                className={`h-2 rounded-full transition-all duration-300 ${
+                                  occupancyRatio >= 0.9 ? 'bg-red-500' : 
+                                  occupancyRatio >= 0.7 ? 'bg-amber-500' : 'bg-green-500'
+                                }`}
+                                style={{ width: `${Math.min(occupancyRatio * 100, 100)}%` }}
+                              ></div>
                             </div>
                           </div>
-                        )}
-                        
-                        {shelter.address && (
-                          <div className="flex items-center mt-2 text-sm text-gray-500">
-                            <MapPin className="h-4 w-4 mr-1" />
-                            <span>{shelter.address}</span>
+
+                          <div className="flex items-center text-sm mb-3">
+                            <div className={`flex items-center px-3 py-1 rounded-full ${
+                              hasCapacity ? 'bg-green-100 text-green-700' : 'bg-red-100 text-red-700'
+                            }`}>
+                              <Users className="h-4 w-4 mr-1" />
+                              <span className="font-medium">
+                                {availableSpace} spaces available
+                              </span>
+                            </div>
                           </div>
-                        )}
-                      </div>
-                      
-                      {!hasCapacity && (
-                        <div className="text-xs text-red-600 font-medium">
-                          Insufficient capacity
+                          
+                          {shelter.features && (
+                            <div className="mt-3">
+                              <div className="flex flex-wrap gap-2">
+                                {shelter.features.split(',').map((feature, index) => (
+                                  <span
+                                    key={index}
+                                    className="inline-flex items-center px-3 py-1 text-xs bg-blue-100 text-blue-800 rounded-full font-medium"
+                                  >
+                                    {feature.trim()}
+                                  </span>
+                                ))}
+                              </div>
+                            </div>
+                          )}
+                          
+                          {shelter.address && (
+                            <div className="flex items-center mt-3 text-sm text-gray-500 bg-gray-50 rounded-lg p-2">
+                              <MapPin className="h-4 w-4 mr-2 text-gray-400" />
+                              <span>{shelter.address}</span>
+                            </div>
+                          )}
                         </div>
-                      )}
+                      </div>
                     </div>
                   </div>
                 );
@@ -184,25 +231,39 @@ export default function ShelterSelectionModal({
           )}
         </div>
 
-        {/* Footer */}
-        <div className="flex items-center justify-end space-x-3 p-6 border-t border-gray-200">
-          <button
-            onClick={onClose}
-            className="px-4 py-2 text-gray-700 bg-gray-100 hover:bg-gray-200 rounded-lg transition-colors"
-          >
-            Cancel
-          </button>
-          <button
-            onClick={handleConfirm}
-            disabled={!selectedShelterId}
-            className={`px-4 py-2 rounded-lg font-medium transition-colors ${
-              selectedShelterId
-                ? 'bg-green-600 text-white hover:bg-green-700'
-                : 'bg-gray-300 text-gray-500 cursor-not-allowed'
-            }`}
-          >
-            Mark as Resolved
-          </button>
+        {/* Footer - Fixed at bottom */}
+        <div className="bg-white border-t border-gray-200 p-6 mt-auto flex-shrink-0">
+          <div className="flex items-center justify-between">
+            <div className="text-sm text-gray-600">
+              {selectedShelterId ? (
+                <span className="flex items-center text-green-600">
+                  <Check className="h-4 w-4 mr-1" />
+                  Shelter selected
+                </span>
+              ) : (
+                'Please select a shelter to continue'
+              )}
+            </div>
+            <div className="flex items-center space-x-3">
+              <button
+                onClick={onClose}
+                className="px-6 py-2 text-gray-700 bg-gray-100 hover:bg-gray-200 rounded-xl transition-all duration-200 font-medium"
+              >
+                Cancel
+              </button>
+              <button
+                onClick={handleConfirm}
+                disabled={!selectedShelterId}
+                className={`px-6 py-2 rounded-xl font-semibold transition-all duration-200 ${
+                  selectedShelterId
+                    ? 'bg-gradient-to-r from-green-600 to-green-700 text-white hover:from-green-700 hover:to-green-800 shadow-lg hover:shadow-xl'
+                    : 'bg-gray-300 text-gray-500 cursor-not-allowed'
+                }`}
+              >
+                ✅ Assign & Resolve
+              </button>
+            </div>
+          </div>
         </div>
       </div>
     </div>

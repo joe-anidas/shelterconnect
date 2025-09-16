@@ -21,8 +21,8 @@ export const config = {
   enableMockData: import.meta.env.VITE_ENABLE_MOCK_DATA === 'true',
   enableRealTimeUpdates: import.meta.env.VITE_ENABLE_REAL_TIME !== 'false',
   
-  // Polling Configuration
-  pollingInterval: parseInt(import.meta.env.VITE_POLLING_INTERVAL || '5000'),
+  // Polling Configuration (optimized for faster rebalancing)
+  pollingInterval: parseInt(import.meta.env.VITE_POLLING_INTERVAL || '2000'),
   
   // Debug Configuration
   enableApiLogging: import.meta.env.VITE_ENABLE_API_LOGGING === 'true',

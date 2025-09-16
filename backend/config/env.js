@@ -37,8 +37,12 @@ export const config = {
   rateLimitMax: parseInt(process.env.RATE_LIMIT_MAX) || 1000,
   
   // Agent Configuration
-  agentPollingInterval: parseInt(process.env.AGENT_POLLING_INTERVAL) || 5000,
-  rebalanceThreshold: parseFloat(process.env.REBALANCE_THRESHOLD) || 0.8,
+  // Agent Polling Interval (milliseconds) - optimized for faster rebalancing
+  agentPollingInterval: parseInt(process.env.AGENT_POLL_INTERVAL_MS || '2000'),
+  // Rebalancing threshold (75% occupancy trigger for faster response)
+  rebalanceThreshold: parseFloat(process.env.REBALANCE_THRESHOLD || '0.75'),
+  // Critical threshold for immediate action
+  criticalThreshold: parseFloat(process.env.CRITICAL_THRESHOLD || '0.85'),
   
   // Logging
   logLevel: process.env.LOG_LEVEL || 'info',

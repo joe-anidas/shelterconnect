@@ -217,7 +217,7 @@ export default function DashboardPage() {
               </h2>
               <p className="text-sm text-slate-600">Real-time occupancy status and locations</p>
             </div>
-            <div className="p-4">
+            <div className="p-4 relative z-10">
               <LeafletMapView 
                 shelters={shelters} 
                 requests={requests.filter((r: any) => r.status === 'pending')}

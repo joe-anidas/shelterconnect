@@ -133,22 +133,35 @@ app.listen(config.port, () => {
     console.log(`🔧 Mock data: ${config.enableMockData ? 'enabled' : 'disabled'}`);
     console.log(`🔧 API logging: ${config.enableApiLogging ? 'enabled' : 'disabled'}`);
   }
-  // Auto-rebalancing scheduler
-  const intervalMs = parseInt(process.env.REBALANCE_POLL_INTERVAL_MS || '60000');
-  const threshold = parseFloat(process.env.REBALANCE_THRESHOLD || '0.8');
+  // Auto-rebalancing scheduler (optimized for faster response)
+  const intervalMs = parseInt(process.env.REBALANCE_POLL_INTERVAL_MS || '15000');
+  const threshold = parseFloat(process.env.REBALANCE_THRESHOLD || '0.75');
   setInterval(async () => {
     try {
       const { rebalancingSuggestions, alerts, overCapacityShelters } = await computeRebalanceSuggestions(threshold);
+      
+      // Check for critical capacity shelters (>85%) for immediate action
+      const criticalShelters = overCapacityShelters.filter(s => (s.occupancy / s.capacity) > 0.85);
+      
       if (overCapacityShelters.length === 0 || rebalancingSuggestions.length === 0) return;
 
-      // Execute suggestions automatically
-      const results = await executeRebalancingDirect(rebalancingSuggestions);
+      // Prioritize critical shelter suggestions
+      const prioritizedSuggestions = rebalancingSuggestions.sort((a, b) => {
+        const aPriority = a.priority === 'high' ? 0 : 1;
+        const bPriority = b.priority === 'high' ? 0 : 1;
+        return aPriority - bPriority;
+      });
+
+      // Execute suggestions automatically (process high priority first)
+      const results = await executeRebalancingDirect(prioritizedSuggestions);
 
       // Email summary
       try {
         const adminEmail = process.env.ADMIN_EMAIL || 'joeben2211@gmail.com';
-        const subject = `Auto-Rebalance Executed: ${results.filter(r => r.success).length}/${results.length} actions`;
-        const body = `Alerts:\n${alerts.map(a => `- ${a.shelter_name} at ${a.occupancy_rate}% (${a.severity})`).join('\n')}\n\nResults:\n${results.map(r => r.success ? `Moved ${r.families_moved} from ${r.from_shelter} to ${r.to_shelter}` : `Failed: ${r.error}`).join('\n')}`;
+        const criticalCount = criticalShelters.length;
+        const subject = `Auto-Rebalance Executed${criticalCount > 0 ? ' (CRITICAL)' : ''}: ${results.filter(r => r.success).length}/${results.length} actions`;
+        const criticalWarning = criticalCount > 0 ? `⚠️ CRITICAL: ${criticalCount} shelter(s) above 85% capacity!\n\n` : '';
+        const body = `${criticalWarning}Alerts:\n${alerts.map(a => `- ${a.shelter_name} at ${a.occupancy_rate}% (${a.severity})`).join('\n')}\n\nResults:\n${results.map(r => r.success ? `✅ Moved ${r.families_moved} from ${r.from_shelter} to ${r.to_shelter}` : `❌ Failed: ${r.error}`).join('\n')}`;
         await sendEmail({ to: adminEmail, subject, text: body });
       } catch (e) {
         console.warn('Failed to send auto-rebalance email:', e.message);
