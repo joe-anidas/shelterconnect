@@ -172,7 +172,7 @@ export default function RequestFeed({ requests, onAcceptArrival, onDeleteRequest
                     request.assigned_shelter_id
                   )}
                 >
-                  Resolved
+                  Resolve
                 </button>
               )}
 

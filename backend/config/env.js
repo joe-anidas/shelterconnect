@@ -20,7 +20,7 @@ export const config = {
   },
   
   // API Keys
-  openaiApiKey: process.env.OPENAI_API_KEY,
+  geminiApiKey: process.env.GEMINI_API_KEY,
   googleMapsApiKey: process.env.GOOGLE_MAPS_API_KEY,
   
   // Optional External Services

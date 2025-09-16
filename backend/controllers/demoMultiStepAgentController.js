@@ -77,7 +77,7 @@ class DemoMultiStepAgentWorkflow {
       workflowResults.status = 'completed';
       workflowResults.tidb_vector_search_showcase = {
         core_features: [
-          'VECTOR(1536) data type for OpenAI embeddings',
+          'VECTOR(1536) data type for gemini embeddings',
           'VEC_COSINE_DISTANCE for semantic similarity',
           'HNSW indexes for high-performance vector search',
           'Hybrid search combining vectors with geographic proximity'
@@ -146,7 +146,7 @@ class DemoMultiStepAgentWorkflow {
       const [requestRows] = await db.execute('SELECT * FROM requests WHERE id = ?', [requestId]);
       const request = requestRows[0];
 
-      // Simulate OpenAI embedding generation
+      // Simulate gemini embedding generation
       const requestText = `Family of ${request.people_count} people needs shelter. Special needs: ${request.needs}. Urgency: ${request.urgency}`;
       
       console.log(`🎯 Generating mock embedding for: "${requestText.substring(0, 100)}..."`);
@@ -184,7 +184,7 @@ class DemoMultiStepAgentWorkflow {
 
     try {
       console.log('🎯 SHOWCASING TiDB Vector Search Capabilities:');
-      console.log('   • VECTOR(1536) data type for OpenAI embeddings');
+      console.log('   • VECTOR(1536) data type for gemini embeddings');
       console.log('   • VEC_COSINE_DISTANCE function for similarity search');
       console.log('   • HNSW vector indexes for performance');
       console.log('   • Hybrid search combining vectors + geography');

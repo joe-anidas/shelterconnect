@@ -31,9 +31,9 @@ Error fetching requests: Error: Error fetching requests: Incorrect arguments to 
     at Request.findAll (file:///Users/joe/Documents/GitHub/shelterconnect/backend/models/Request.js:59:13)
     at process.processTicksAndRejections (node:internal/process/task_queues:105:5)
     at async getRequests (file:///Users/joe/Documents/GitHub/shelterconnect/backend/controllers/intakeController.js:106:18)
-No OpenAI API key found, returning mock embedding
+No gemini API key found, returning mock embedding
 Generated embedding for request: 30001
-No OpenAI API key found, returning mock embedding
+No gemini API key found, returning mock embedding
 Generated embedding for request: 30002
 Error fetching requests: Error: Error fetching requests: Incorrect arguments to LIMIT
     at Request.findAll (file:///Users/joe/Documents/GitHub/shelterconnect/backend/models/Request.js:59:13)

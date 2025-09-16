@@ -2,19 +2,19 @@
 
 import fetch from 'node-fetch';
 
-// Generate embeddings using OpenAI API
+// Generate embeddings using gemini API
 export const generateEmbedding = async (text) => {
   try {
     // For demo purposes, return a mock embedding if no API key
-    if (!process.env.OPENAI_API_KEY) {
-      console.log('No OpenAI API key found, returning mock embedding');
+    if (!process.env.gemini_API_KEY) {
+      console.log('No gemini API key found, returning mock embedding');
       return Array.from({ length: 1536 }, () => Math.random() - 0.5);
     }
 
-    const response = await fetch('https://api.openai.com/v1/embeddings', {
+    const response = await fetch('https://api.gemini.com/v1/embeddings', {
       method: 'POST',
       headers: {
-        'Authorization': `Bearer ${process.env.OPENAI_API_KEY}`,
+        'Authorization': `Bearer ${process.env.gemini_API_KEY}`,
         'Content-Type': 'application/json',
       },
       body: JSON.stringify({
@@ -24,7 +24,7 @@ export const generateEmbedding = async (text) => {
     });
 
     if (!response.ok) {
-      throw new Error(`OpenAI API error: ${response.statusText}`);
+      throw new Error(`gemini API error: ${response.statusText}`);
     }
 
     const data = await response.json();
@@ -40,15 +40,15 @@ export const generateEmbedding = async (text) => {
 export const generateEmbeddings = async (texts) => {
   try {
     // For demo purposes, return mock embeddings if no API key
-    if (!process.env.OPENAI_API_KEY) {
-      console.log('No OpenAI API key found, returning mock embeddings');
+    if (!process.env.gemini_API_KEY) {
+      console.log('No gemini API key found, returning mock embeddings');
       return texts.map(() => Array.from({ length: 1536 }, () => Math.random() - 0.5));
     }
 
-    const response = await fetch('https://api.openai.com/v1/embeddings', {
+    const response = await fetch('https://api.gemini.com/v1/embeddings', {
       method: 'POST',
       headers: {
-        'Authorization': `Bearer ${process.env.OPENAI_API_KEY}`,
+        'Authorization': `Bearer ${process.env.gemini_API_KEY}`,
         'Content-Type': 'application/json',
       },
       body: JSON.stringify({
@@ -58,7 +58,7 @@ export const generateEmbeddings = async (texts) => {
     });
 
     if (!response.ok) {
-      throw new Error(`OpenAI API error: ${response.statusText}`);
+      throw new Error(`gemini API error: ${response.statusText}`);
     }
 
     const data = await response.json();

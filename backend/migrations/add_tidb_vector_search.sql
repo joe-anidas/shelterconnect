@@ -8,12 +8,12 @@ USE shelterconnect_ai;
 
 -- Add embedding columns to shelters table
 ALTER TABLE shelters 
-ADD COLUMN features_embedding VECTOR(1536) COMMENT 'OpenAI text-embedding-ada-002 embedding of shelter features and capabilities',
+ADD COLUMN features_embedding VECTOR(1536) COMMENT 'gemini text-embedding-ada-002 embedding of shelter features and capabilities',
 ADD COLUMN description_embedding VECTOR(1536) COMMENT 'Semantic embedding of shelter description';
 
 -- Add embedding columns to requests table  
 ALTER TABLE requests
-ADD COLUMN needs_embedding VECTOR(1536) COMMENT 'OpenAI embedding of family needs and requirements',
+ADD COLUMN needs_embedding VECTOR(1536) COMMENT 'gemini embedding of family needs and requirements',
 ADD COLUMN combined_embedding VECTOR(1536) COMMENT 'Combined embedding of needs + features required';
 
 -- Create vector indexes for efficient similarity search
@@ -82,7 +82,7 @@ CREATE TABLE IF NOT EXISTS vector_search_analytics (
 );
 
 -- Insert sample vector data (placeholder - will be populated by embedding service)
--- These will be replaced with actual OpenAI embeddings
+-- These will be replaced with actual gemini embeddings
 
 -- Sample shelter features for embedding generation:
 INSERT INTO shelters (name, capacity, occupancy, features, address, lat, lng, phone) VALUES

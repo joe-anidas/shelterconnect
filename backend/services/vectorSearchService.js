@@ -35,7 +35,19 @@ class TiDBVectorSearchService {
       }
 
       const request = requestRows[0];
-      const requestEmbedding = request.needs_embedding;
+      let requestEmbedding = request.needs_embedding;
+      
+      // Parse embedding if it's a string
+      if (typeof requestEmbedding === 'string') {
+        try {
+          requestEmbedding = JSON.parse(requestEmbedding);
+        } catch (error) {
+          console.error('❌ Failed to parse embedding from database:', error);
+          throw new Error('Invalid embedding format in database');
+        }
+      }
+      
+      console.log(`🔍 Request embedding type: ${typeof requestEmbedding}, isArray: ${Array.isArray(requestEmbedding)}, length: ${requestEmbedding?.length}`);
       
       // TiDB Vector Search Query - Core demonstration
       const searchQuery = `
@@ -136,7 +148,9 @@ class TiDBVectorSearchService {
 
       console.log(`✅ TiDB Vector Search completed in ${Date.now() - startTime}ms`);
       console.log(`📊 Found ${enrichedMatches.length} matches with avg similarity: ${
-        (enrichedMatches.reduce((sum, m) => sum + m.similarity_score, 0) / enrichedMatches.length).toFixed(3)
+        enrichedMatches.length > 0 
+          ? (enrichedMatches.reduce((sum, m) => sum + m.similarity_score, 0) / enrichedMatches.length).toFixed(3)
+          : 'N/A'
       }`);
 
       // Store search analytics
@@ -325,8 +339,8 @@ class TiDBVectorSearchService {
   calculateFeatureMatchScore(requiredFeatures, shelterFeatures) {
     if (!requiredFeatures || requiredFeatures.trim() === '') return 1.0;
 
-    const required = requiredFeatures.split(',').map(f => f.trim().toLowerCase());
-    const available = shelterFeatures.split(',').map(f => f.trim().toLowerCase());
+    const required = (requiredFeatures || '').split(',').map(f => f.trim().toLowerCase());
+    const available = (shelterFeatures || '').split(',').map(f => f.trim().toLowerCase());
 
     const matchedFeatures = required.filter(feature => available.includes(feature));
     return matchedFeatures.length / required.length;

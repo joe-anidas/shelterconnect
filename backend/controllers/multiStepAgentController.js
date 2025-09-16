@@ -153,7 +153,7 @@ class MultiStepAgentWorkflow {
   }
 
   /**
-   * STEP 2: EMBEDDING AGENT - Generate vector embeddings using OpenAI
+   * STEP 2: EMBEDDING AGENT - Generate vector embeddings using Google Gemini
    */
   async executeEmbeddingAgent(requestId) {
     const stepStart = Date.now();
@@ -172,11 +172,24 @@ class MultiStepAgentWorkflow {
       let embeddingGenerated = false;
 
       if (existingRows[0]?.needs_embedding) {
-        embedding = existingRows[0].needs_embedding;
-        console.log(`  📌 Using existing embedding (${embedding.length} dimensions)`);
+        // Handle existing embedding - stored as JSON string in TiDB
+        const rawEmbedding = existingRows[0].needs_embedding;
+        console.log(`  🔍 Raw embedding type: ${typeof rawEmbedding}, isArray: ${Array.isArray(rawEmbedding)}`);
+        if (typeof rawEmbedding === 'string') {
+          embedding = JSON.parse(rawEmbedding);
+          console.log(`  📌 Parsed embedding from string: ${embedding.length} dimensions`);
+        } else if (Array.isArray(rawEmbedding)) {
+          embedding = rawEmbedding;
+          console.log(`  📌 Using array embedding: ${embedding.length} dimensions`);
+        } else {
+          // TiDB vector format - convert to array
+          embedding = Array.from(rawEmbedding);
+          console.log(`  📌 Converted to array: ${embedding.length} dimensions`);
+        }
+        console.log(`  ✅ Final embedding type: ${typeof embedding}, isArray: ${Array.isArray(embedding)}`);
       } else {
-        // Generate new embedding using OpenAI
-        console.log(`  🧠 Generating new OpenAI embedding...`);
+        // Generate new embedding using Google Gemini
+        console.log(`  🧠 Generating new Gemini embedding...`);
         embedding = await vectorEmbeddingService.embedNewRequest({
           id: requestId,
           ...existingRows[0]
@@ -187,15 +200,15 @@ class MultiStepAgentWorkflow {
 
       const embeddingData = {
         request_id: requestId,
-        embedding_dimensions: embedding.length,
+        embedding_dimensions: embedding ? embedding.length : 0,
         embedding_generated: embeddingGenerated,
-        openai_model: 'text-embedding-ada-002',
-        embedding_preview: embedding.slice(0, 5), // First 5 dimensions for demo
-        embedding_statistics: {
+        gemini_model: 'text-embedding-004',
+        embedding_preview: embedding ? embedding.slice(0, 5) : [], // First 5 dimensions for demo
+        embedding_statistics: embedding && Array.isArray(embedding) ? {
           min_value: Math.min(...embedding),
           max_value: Math.max(...embedding),
           avg_value: embedding.reduce((a, b) => a + b, 0) / embedding.length
-        }
+        } : null
       };
 
       await this.logWorkflowStep(requestId, 'embedding', 'embedding_agent', 'completed', embeddingData);
@@ -544,10 +557,11 @@ class MultiStepAgentWorkflow {
 
   // Helper methods for request analysis
   classifyUrgency(request) {
+    const needs = request.needs || '';
     const urgencyFactors = {
-      medical: request.needs.toLowerCase().includes('medical') ? 2 : 0,
-      elderly: request.needs.toLowerCase().includes('elderly') ? 1.5 : 0,
-      children: request.needs.toLowerCase().includes('child') ? 1.2 : 0,
+      medical: needs.toLowerCase().includes('medical') ? 2 : 0,
+      elderly: needs.toLowerCase().includes('elderly') ? 1.5 : 0,
+      children: needs.toLowerCase().includes('child') ? 1.2 : 0,
       large_family: request.people_count > 6 ? 1.3 : 0
     };
 
@@ -568,11 +582,12 @@ class MultiStepAgentWorkflow {
   }
 
   categorizeNeeds(needs) {
+    const needsText = needs || '';
     const categories = {
-      medical: /medical|medication|doctor|hospital/i.test(needs),
-      accessibility: /wheelchair|mobility|disabled/i.test(needs),
-      family: /child|elderly|baby|pregnant/i.test(needs),
-      pets: /pet|dog|cat|animal/i.test(needs)
+      medical: /medical|medication|doctor|hospital/i.test(needsText),
+      accessibility: /wheelchair|mobility|disabled/i.test(needsText),
+      family: /child|elderly|baby|pregnant/i.test(needsText),
+      pets: /pet|dog|cat|animal/i.test(needsText)
     };
 
     return categories;
@@ -583,12 +598,23 @@ class MultiStepAgentWorkflow {
   }
 
   extractSpecialNeeds(needs) {
+    const needsText = needs || '';
     const specialNeeds = [];
-    if (/medical|medication/i.test(needs)) specialNeeds.push('medical_care');
-    if (/wheelchair|mobility/i.test(needs)) specialNeeds.push('accessibility');
-    if (/elderly/i.test(needs)) specialNeeds.push('elderly_care');
-    if (/child|baby/i.test(needs)) specialNeeds.push('childcare');
-    if (/pet/i.test(needs)) specialNeeds.push('pet_accommodation');
+    if (/medical|medication/i.test(needsText)) {
+      specialNeeds.push('medical_care');
+    }
+    if (/wheelchair|mobility/i.test(needsText)) {
+      specialNeeds.push('accessibility');
+    }
+    if (/elderly/i.test(needsText)) {
+      specialNeeds.push('elderly_care');
+    }
+    if (/child|baby/i.test(needsText)) {
+      specialNeeds.push('childcare');
+    }
+    if (/pet/i.test(needsText)) {
+      specialNeeds.push('pet_accommodation');
+    }
     return specialNeeds;
   }
 

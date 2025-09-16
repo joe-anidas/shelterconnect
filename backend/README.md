@@ -27,7 +27,7 @@ Multi-step agentic disaster relief coordination system built with Node.js, Expre
 
 - **Backend**: Node.js, Express.js
 - **Database**: TiDB Serverless (vector + full-text search)
-- **AI/ML**: OpenAI API for embeddings
+- **AI/ML**: gemini API for embeddings
 - **Maps**: Google Maps API for geocoding and routing
 - **Security**: Helmet, CORS, Rate limiting
 
@@ -104,8 +104,8 @@ DB_PASSWORD=your-tidb-password
 DB_NAME=shelterconnect_ai
 DB_PORT=4000
 
-# OpenAI API (for embeddings and LLM features)
-OPENAI_API_KEY=your-openai-api-key
+# gemini API (for embeddings and LLM features)
+gemini_API_KEY=your-gemini-api-key
 
 # Google Maps API (for geocoding and routing)
 GOOGLE_MAPS_API_KEY=your-google-maps-api-key
@@ -133,7 +133,7 @@ The system uses the following main tables:
 
 The backend includes mock data and fallback functionality for development without external API keys:
 
-- Mock embeddings when OpenAI API key is not provided
+- Mock embeddings when gemini API key is not provided
 - Mock coordinates when Google Maps API key is not provided
 - Sample shelter and request data for testing
 

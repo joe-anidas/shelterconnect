@@ -15,7 +15,7 @@ export const config = {
   
   // Optional External Services
   googleMapsApiKey: import.meta.env.VITE_GOOGLE_MAPS_API_KEY,
-  openaiApiKey: import.meta.env.VITE_OPENAI_API_KEY,
+  geminiApiKey: import.meta.env.VITE_gemini_API_KEY,
   
   // Feature Flags
   enableMockData: import.meta.env.VITE_ENABLE_MOCK_DATA === 'true',

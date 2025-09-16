@@ -52,7 +52,7 @@ CREATE TABLE IF NOT EXISTS requests (
 CREATE TABLE IF NOT EXISTS request_vectors (
     id INT PRIMARY KEY AUTO_INCREMENT,
     request_id INT NOT NULL,
-    embedding VECTOR(1536), -- OpenAI embedding dimension
+    embedding VECTOR(1536), -- gemini embedding dimension
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     
     FOREIGN KEY (request_id) REFERENCES requests(id) ON DELETE CASCADE,
@@ -63,7 +63,7 @@ CREATE TABLE IF NOT EXISTS request_vectors (
 CREATE TABLE IF NOT EXISTS shelter_vectors (
     id INT PRIMARY KEY AUTO_INCREMENT,
     shelter_id INT NOT NULL,
-    embedding VECTOR(1536), -- OpenAI embedding dimension
+    embedding VECTOR(1536), -- gemini embedding dimension
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     
     FOREIGN KEY (shelter_id) REFERENCES shelters(id) ON DELETE CASCADE,
